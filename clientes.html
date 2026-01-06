@@ -60,6 +60,7 @@
         <nav>
             <a href="index.html">Cotización</a>
             <a href="cotizaciones.html">Cotizaciones</a>
+            <a href="remisiones.html">Remisiones</a>
             <a href="articulos.html">Artículos</a>
             <a class="active" href="clientes.html">Clientes</a>
         </nav>
@@ -118,6 +119,8 @@
             articulos: "inquiserco_articulos",
             cotizaciones: "inquiserco_cotizaciones",
             consecutivo: "inquiserco_consecutivo",
+            remisiones: "inquiserco_remisiones",
+            remisionConsecutivo: "inquiserco_remision_consecutivo",
         };
         const data = { clientes: JSON.parse(localStorage.getItem(storage.clientes) || "[]") };
         const supabaseInputs = {
@@ -138,6 +141,8 @@
             clientes: JSON.parse(localStorage.getItem(storage.clientes) || "[]"),
             cotizaciones: JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]"),
             consecutivo: parseInt(localStorage.getItem(storage.consecutivo) || "113", 10),
+            remisiones: JSON.parse(localStorage.getItem(storage.remisiones) || "[]"),
+            remisionConsecutivo: parseInt(localStorage.getItem(storage.remisionConsecutivo) || "1", 10),
         });
 
         function exportarDatos() {
@@ -160,8 +165,12 @@
             persistir(storage.clientes, data.clientes);
             if (contenido.articulos) persistir(storage.articulos, contenido.articulos);
             if (contenido.cotizaciones) persistir(storage.cotizaciones, contenido.cotizaciones);
+            if (Array.isArray(contenido.remisiones)) persistir(storage.remisiones, contenido.remisiones);
             if (Number.isFinite(contenido.consecutivo)) {
                 localStorage.setItem(storage.consecutivo, contenido.consecutivo);
+            }
+            if (Number.isFinite(contenido.remisionConsecutivo)) {
+                localStorage.setItem(storage.remisionConsecutivo, contenido.remisionConsecutivo);
             }
             renderClientes();
             limpiarCliente();
