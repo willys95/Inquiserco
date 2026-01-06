@@ -145,6 +145,7 @@
         <nav class="hide-on-pdf">
             <a class="active" href="index.html">Cotización</a>
             <a href="cotizaciones.html">Cotizaciones</a>
+            <a href="remisiones.html">Remisiones</a>
             <a href="articulos.html">Artículos</a>
             <a href="clientes.html">Clientes</a>
         </nav>
@@ -342,6 +343,8 @@
             cotizaciones: "inquiserco_cotizaciones",
             cotizacionPendiente: "inquiserco_cotizacion_pendiente",
             consecutivo: "inquiserco_consecutivo",
+            remisiones: "inquiserco_remisiones",
+            remisionConsecutivo: "inquiserco_remision_consecutivo",
         };
 
         const supabaseInputs = {
@@ -358,6 +361,8 @@
             clientes: JSON.parse(localStorage.getItem(storage.clientes) || "[]"),
             cotizaciones: JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]"),
             consecutivo: parseInt(localStorage.getItem(storage.consecutivo) || "113", 10),
+            remisiones: JSON.parse(localStorage.getItem(storage.remisiones) || "[]"),
+            remisionConsecutivo: parseInt(localStorage.getItem(storage.remisionConsecutivo) || "1", 10),
         };
         let cotizacionCargadaNumero = null;
 
@@ -523,6 +528,8 @@
             clientes: data.clientes,
             cotizaciones: data.cotizaciones,
             consecutivo: data.consecutivo,
+            remisiones: JSON.parse(localStorage.getItem(storage.remisiones) || "[]"),
+            remisionConsecutivo: parseInt(localStorage.getItem(storage.remisionConsecutivo) || "1", 10),
         });
 
         function restaurarDesdeBackup(contenido, { silenciarAlertas = false } = {}) {
@@ -534,6 +541,10 @@
             data.articulos = contenido.articulos;
             data.clientes = contenido.clientes;
             data.cotizaciones = contenido.cotizaciones;
+            if (Array.isArray(contenido.remisiones)) {
+                data.remisiones = contenido.remisiones;
+                persistir(storage.remisiones, data.remisiones);
+            }
 
             persistir(storage.articulos, data.articulos);
             persistir(storage.clientes, data.clientes);
@@ -541,6 +552,10 @@
 
             if (Number.isFinite(contenido.consecutivo)) {
                 data.consecutivo = Math.max(1, contenido.consecutivo);
+            }
+            if (Number.isFinite(contenido.remisionConsecutivo)) {
+                data.remisionConsecutivo = Math.max(1, contenido.remisionConsecutivo);
+                persistir(storage.remisionConsecutivo, data.remisionConsecutivo);
             }
 
             persistir(storage.consecutivo, data.consecutivo);
