@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remisiones - Inquiserco</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-sync.js"></script>
+    <style>
+        :root {
+            --primary: #0296c2;
+            --secondary: #0066a1;
+            --accent: #00b4e5;
+            --text: #262626;
+            --muted: #f2f7fb;
+            --border: #d9e5f0;
+            --table-header: #6f6a6a;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background: #eef2f6;
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+        }
+
+        h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: 0.2px; }
+
+        .page {
+            width: 11in;
+            min-height: 8.5in;
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 24px 28px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.15);
+            border-radius: 12px;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #111;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .header-left strong {
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
+        .header-left span {
+            font-size: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+
+        nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            color: var(--secondary);
+            font-weight: 700;
+            background: #f8fbff;
+        }
+
+        nav a.active {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: white;
+            border-color: transparent;
+        }
+
+        .section-title {
+            background: #111;
+            color: white;
+            padding: 6px 10px;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 0;
+            border: 1px solid #111;
+            border-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .info-block {
+            padding: 6px 10px;
+            border-right: 1px solid #111;
+        }
+
+        .info-block:last-child {
+            border-right: 0;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #111;
+            font-size: 12px;
+            padding: 4px 0;
+        }
+
+        .info-row:last-child {
+            border-bottom: 0;
+        }
+
+        .info-row strong { font-weight: 700; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #111; padding: 6px 8px; font-size: 12px; }
+        th { background: #6f6a6a; color: white; text-transform: uppercase; font-weight: 700; letter-spacing: 0.3px; }
+        tbody tr:nth-child(even) { background: #fafafa; }
+
+        #tablaRemision input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        #tablaRemision input:disabled {
+            color: #111;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0 14px;
+        }
+
+        .backup-card {
+            border: 1px dashed var(--border);
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #f8fbff;
+            margin: 12px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .backup-card p { margin: 0; color: #2b4c63; font-weight: 600; }
+
+        .btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            background: #f8fbff;
+            color: var(--secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: white;
+            border: none;
+        }
+
+        .btn.danger {
+            background: #ffe8e6;
+            color: #b42318;
+            border: 1px solid #fecdca;
+        }
+
+        .btn:hover { transform: translateY(-1px); }
+
+        .select-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 14px;
+        }
+
+        .select-row label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #425466;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .select-row input,
+        .select-row select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .observacion {
+            border: 1px solid #111;
+            border-top: 0;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .observacion textarea {
+            width: 100%;
+            border: none;
+            resize: vertical;
+            font-size: 12px;
+            font-family: inherit;
+            min-height: 38px;
+        }
+
+        .signature-area {
+            margin-top: 18px;
+            border-top: 1px solid #111;
+            padding-top: 18px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: end;
+        }
+
+        .signature-box {
+            text-align: center;
+            min-height: 90px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #111;
+            margin-top: 30px;
+        }
+
+        .signature-label {
+            font-size: 11px;
+            margin-top: 6px;
+            display: block;
+        }
+
+        .signature-image {
+            max-width: 240px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        .supabase-panel { display: none; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+        .badge { padding: 3px 8px; background: var(--muted); border-radius: 999px; border: 1px solid var(--border); font-size: 11px; color: #2b4c63; }
+        .edit-only { display: none; }
+        .edit-enabled .edit-only { display: table-cell; }
+        .edit-enabled .edit-only-block { display: inline-flex; }
+        .edit-only-block { display: none; }
+
+        .list-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-top: 14px;
+        }
+
+        .list-card h3 {
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+
+        .list-card table th { background: #f0f7fb; color: #2b4c63; }
+
+        @media (max-width: 1100px) {
+            body { padding: 12px; }
+            .page { padding: 18px; }
+            .select-row { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            body { padding: 0; background: white; }
+            nav, .action-bar, .list-card, .select-row .edit-toggle, .supabase-panel { display: none !important; }
+            .page { box-shadow: none; border-radius: 0; width: 11in; min-height: 8.5in; }
+            .edit-only { display: none !important; }
+        }
+
+        @page {
+            size: letter landscape;
+            margin: 0.35in;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="top-bar">
+            <div class="header-left">
+                <strong>INSUMOS QUIMICOS Y SERVICIOS DE LA COSTA</strong>
+                <span>NIT : 901875715-0</span>
+            </div>
+            <div class="header-right">
+                <span style="font-size:11px;font-weight:700;">INQUISERCO</span>
+                <img src="logo-inquiserco.svg" alt="Logo INQUISERCO" class="header-logo" />
+            </div>
+        </div>
+
+        <nav>
+            <a href="index.html">Cotización</a>
+            <a href="cotizaciones.html">Cotizaciones</a>
+            <a class="active" href="remisiones.html">Remisiones</a>
+            <a href="articulos.html">Artículos</a>
+            <a href="clientes.html">Clientes</a>
+        </nav>
+
+        <div class="backup-card supabase-panel" style="flex-direction: column; align-items: flex-start;">
+            <p>Sincroniza con Supabase para guardar en la nube.</p>
+            <p class="badge" style="background:#e6f4ff;color:#0f4f71;">Supabase configurado automáticamente para INQUISERCO.</p>
+            <div class="sr-only" aria-hidden="true">
+                <input id="supabaseUrl" type="hidden" value="https://uxfehqfkcthsmvpegzfn.supabase.co" />
+                <input id="supabaseKey" type="hidden" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4ZmVocWZrY3Roc212cGVnemZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3MDYzMTksImV4cCI6MjA4MDI4MjMxOX0.jEC9vCZy7_XElSnQWMx2D2C0R_l1JCvwhwvjkDGcrEs" />
+                <input id="supabaseTable" type="hidden" value="inquiserco_respaldo" />
+                <input id="supabaseRecord" type="hidden" value="principal" />
+            </div>
+            <div class="action-bar">
+                <button class="btn" onclick="probarSupabase()">Probar conexión</button>
+                <button class="btn" onclick="descargarDesdeSupabase()">Descargar desde Supabase</button>
+                <button class="btn primary" onclick="subirASupabase()">Subir a Supabase</button>
+                <span class="badge" id="supabaseStatus">Supabase sin configurar</span>
+            </div>
+        </div>
+
+        <div class="select-row">
+            <div>
+                <label for="selectCotizacion">Cotización base</label>
+                <select id="selectCotizacion">
+                    <option value="">-- Seleccionar --</option>
+                </select>
+            </div>
+            <div>
+                <label for="remisionNumero">Remisión salida de venta</label>
+                <input id="remisionNumero" type="text" readonly />
+            </div>
+            <div>
+                <label for="fechaEntrega">Fecha de entrega</label>
+                <input id="fechaEntrega" type="date" />
+            </div>
+            <div>
+                <label for="vendedor">Vendedor</label>
+                <input id="vendedor" type="text" placeholder="02" />
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn primary" onclick="cargarCotizacionSeleccionada()">Cargar cotización</button>
+            <button class="btn edit-only-block" onclick="agregarFila()">Agregar fila</button>
+            <button class="btn" onclick="toggleEdicion()" id="btnToggleEdicion">Habilitar edición</button>
+            <button class="btn primary" onclick="guardarRemision()">Guardar remisión</button>
+            <button class="btn" onclick="window.print()">Imprimir</button>
+            <span class="badge" id="remisionesCount">0 remisiones</span>
+        </div>
+
+        <div class="section-title">Información del cliente</div>
+        <div class="info-grid">
+            <div class="info-block">
+                <div class="info-row"><strong>Cliente:</strong> <span id="clienteNombre">-</span></div>
+                <div class="info-row"><strong>Dirección:</strong> <span id="clienteDireccion">-</span></div>
+                <div class="info-row"><strong>Concepto:</strong> <span id="clienteConcepto">REMISION SALIDA</span></div>
+            </div>
+            <div class="info-block">
+                <div class="info-row"><strong>Remisión:</strong> <span id="remisionEtiqueta">-</span></div>
+                <div class="info-row"><strong>Fecha de entrega:</strong> <span id="fechaEntregaTexto">-</span></div>
+                <div class="info-row"><strong>Vendedor:</strong> <span id="vendedorTexto">-</span></div>
+            </div>
+        </div>
+
+        <table id="tablaRemision">
+            <thead>
+                <tr>
+                    <th style="width:60px;">Número de serie</th>
+                    <th>Nombre del producto</th>
+                    <th style="width:90px;">Unidades</th>
+                    <th style="width:90px;">Cantidad</th>
+                    <th>Comentarios</th>
+                    <th class="edit-only" style="width:110px;">Precio</th>
+                    <th class="edit-only" style="width:90px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div class="observacion">
+            <strong>Observación:</strong>
+            <textarea id="observacion" placeholder="Agrega observaciones o comentarios generales..."></textarea>
+        </div>
+
+        <div class="signature-area">
+            <div class="signature-box">
+                <div id="firmaContainer"></div>
+                <div class="signature-line"></div>
+                <span class="signature-label">Firma recibido</span>
+            </div>
+            <div class="signature-box"></div>
+        </div>
+
+        <div class="list-card">
+            <h3>Remisiones guardadas</h3>
+            <table id="tablaRemisionesGuardadas">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Cliente</th>
+                        <th>Fecha entrega</th>
+                        <th>Cotización</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const storage = {
+            cotizaciones: "inquiserco_cotizaciones",
+            remisiones: "inquiserco_remisiones",
+            remisionConsecutivo: "inquiserco_remision_consecutivo",
+            articulos: "inquiserco_articulos",
+            clientes: "inquiserco_clientes",
+            consecutivo: "inquiserco_consecutivo",
+        };
+
+        const data = {
+            cotizaciones: JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]"),
+            remisiones: JSON.parse(localStorage.getItem(storage.remisiones) || "[]"),
+            remisionConsecutivo: parseInt(localStorage.getItem(storage.remisionConsecutivo) || "1", 10),
+        };
+
+        const supabaseInputs = {
+            url: document.getElementById("supabaseUrl"),
+            key: document.getElementById("supabaseKey"),
+            table: document.getElementById("supabaseTable"),
+            record: document.getElementById("supabaseRecord"),
+            status: document.getElementById("supabaseStatus"),
+        };
+
+        const elements = {
+            selectCotizacion: document.getElementById("selectCotizacion"),
+            remisionNumero: document.getElementById("remisionNumero"),
+            fechaEntrega: document.getElementById("fechaEntrega"),
+            vendedor: document.getElementById("vendedor"),
+            clienteNombre: document.getElementById("clienteNombre"),
+            clienteDireccion: document.getElementById("clienteDireccion"),
+            clienteConcepto: document.getElementById("clienteConcepto"),
+            remisionEtiqueta: document.getElementById("remisionEtiqueta"),
+            fechaEntregaTexto: document.getElementById("fechaEntregaTexto"),
+            vendedorTexto: document.getElementById("vendedorTexto"),
+            observacion: document.getElementById("observacion"),
+            tablaRemision: document.querySelector("#tablaRemision tbody"),
+            firmaContainer: document.getElementById("firmaContainer"),
+            remisionesCount: document.getElementById("remisionesCount"),
+            tablaRemisionesGuardadas: document.querySelector("#tablaRemisionesGuardadas tbody"),
+            btnToggleEdicion: document.getElementById("btnToggleEdicion"),
+        };
+
+        let remisionActual = null;
+        let editMode = false;
+
+        const persistir = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+
+        function actualizarEstadoSupabase(mensaje, esError = false) {
+            supabaseInputs.status.textContent = mensaje;
+            supabaseInputs.status.style.background = esError ? "#ffe8e6" : "#e6f4ff";
+            supabaseInputs.status.style.color = esError ? "#b42318" : "#0f4f71";
+        }
+
+        function cargarConfigSupabaseEnUI() {
+            const config = SupaSync.loadConfig();
+            if (supabaseInputs.url) supabaseInputs.url.value = config.url || "";
+            if (supabaseInputs.key) supabaseInputs.key.value = config.key || "";
+            if (supabaseInputs.table) supabaseInputs.table.value = config.table || "";
+            if (supabaseInputs.record) supabaseInputs.record.value = config.record || "";
+            actualizarEstadoSupabase(config.url && config.key ? "Config cargada" : "Supabase sin configurar");
+        }
+
+        function obtenerConfigSupabase() {
+            return SupaSync.saveConfig({
+                url: supabaseInputs.url?.value?.trim(),
+                key: supabaseInputs.key?.value?.trim(),
+                table: supabaseInputs.table?.value?.trim() || "inquiserco_respaldo",
+                record: supabaseInputs.record?.value?.trim() || "principal",
+            });
+        }
+
+        function construirSnapshot() {
+            return {
+                version: 1,
+                generado: new Date().toISOString(),
+                articulos: JSON.parse(localStorage.getItem(storage.articulos) || "[]"),
+                clientes: JSON.parse(localStorage.getItem(storage.clientes) || "[]"),
+                cotizaciones: JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]"),
+                remisiones: JSON.parse(localStorage.getItem(storage.remisiones) || "[]"),
+                consecutivo: parseInt(localStorage.getItem(storage.consecutivo) || "1", 10),
+                remisionConsecutivo: parseInt(localStorage.getItem(storage.remisionConsecutivo) || "1", 10),
+            };
+        }
+
+        function restaurarDesdeBackup(contenido, { silenciarAlertas = false } = {}) {
+            if (!Array.isArray(contenido.articulos) || !Array.isArray(contenido.clientes) || !Array.isArray(contenido.cotizaciones)) {
+                alert("El archivo no tiene el formato esperado.");
+                return;
+            }
+            if (contenido.articulos) localStorage.setItem(storage.articulos, JSON.stringify(contenido.articulos));
+            if (contenido.clientes) localStorage.setItem(storage.clientes, JSON.stringify(contenido.clientes));
+            if (contenido.cotizaciones) localStorage.setItem(storage.cotizaciones, JSON.stringify(contenido.cotizaciones));
+            if (Array.isArray(contenido.remisiones)) {
+                localStorage.setItem(storage.remisiones, JSON.stringify(contenido.remisiones));
+            }
+            if (Number.isFinite(contenido.consecutivo)) {
+                localStorage.setItem(storage.consecutivo, Math.max(1, contenido.consecutivo));
+            }
+            if (Number.isFinite(contenido.remisionConsecutivo)) {
+                localStorage.setItem(storage.remisionConsecutivo, Math.max(1, contenido.remisionConsecutivo));
+            }
+
+            data.cotizaciones = JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]");
+            data.remisiones = JSON.parse(localStorage.getItem(storage.remisiones) || "[]");
+            data.remisionConsecutivo = parseInt(localStorage.getItem(storage.remisionConsecutivo) || "1", 10);
+            renderCotizacionesSelect();
+            renderRemisionesGuardadas();
+            actualizarConsecutivo();
+            if (!silenciarAlertas) {
+                alert("Datos importados correctamente.");
+            }
+        }
+
+        async function probarSupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                await SupaSync.testConnection(config);
+                actualizarEstadoSupabase("Conexión exitosa con Supabase");
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "No se pudo conectar", true);
+                alert("Revisa la tabla y credenciales de Supabase.");
+            }
+        }
+
+        async function descargarDesdeSupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                const snapshot = await SupaSync.pullSnapshot(config);
+                if (!snapshot?.payload) {
+                    actualizarEstadoSupabase("No hay datos remotos con ese ID", true);
+                    return;
+                }
+                restaurarDesdeBackup(snapshot.payload, { silenciarAlertas: true });
+                actualizarEstadoSupabase(`Datos descargados (actualizado ${snapshot.updated_at ? new Date(snapshot.updated_at).toLocaleString() : "ahora"})`);
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "Fallo al descargar", true);
+                alert("No se pudieron recuperar los datos de Supabase.");
+            }
+        }
+
+        async function subirASupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                const saved = await SupaSync.pushSnapshot(construirSnapshot(), config);
+                actualizarEstadoSupabase(`Datos subidos (${saved?.updated_at ? new Date(saved.updated_at).toLocaleString() : "sin fecha"})`);
+                alert("Sincronizado en Supabase.");
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "Fallo al subir", true);
+                alert("No se pudieron enviar los datos a Supabase.");
+            }
+        }
+
+        async function sincronizarSupabaseAutomaticamente() {
+            const config = SupaSync.loadConfig();
+            if (!SupaSync.hasConfig(config)) return;
+            actualizarEstadoSupabase("Sincronizando automáticamente...");
+            const saved = await SupaSync.pushIfConfigured(construirSnapshot(), config);
+            if (saved) {
+                const fecha = saved.updated_at ? new Date(saved.updated_at).toLocaleString() : "ahora";
+                actualizarEstadoSupabase(`Sincronizado automáticamente (${fecha})`);
+            } else {
+                actualizarEstadoSupabase("No se pudo sincronizar automáticamente", true);
+            }
+        }
+
+        async function cargarDatosDesdeSupabase() {
+            const config = SupaSync.loadConfig();
+            if (!SupaSync.hasConfig(config)) return;
+            actualizarEstadoSupabase("Cargando respaldo en la nube...");
+            const snapshot = await SupaSync.pullIfConfigured(config);
+            if (snapshot?.payload) {
+                restaurarDesdeBackup(snapshot.payload, { silenciarAlertas: true });
+                actualizarEstadoSupabase(`Datos cargados (${snapshot.updated_at ? new Date(snapshot.updated_at).toLocaleString() : "ahora"})`);
+            } else {
+                await SupaSync.pushIfConfigured(construirSnapshot(), config);
+                actualizarEstadoSupabase("Datos locales subidos automáticamente");
+            }
+        }
+
+        function calcularSiguienteRemision() {
+            const maxNumero = data.remisiones.reduce((max, remision) => {
+                const numero = parseInt(remision.numero, 10);
+                return Number.isFinite(numero) ? Math.max(max, numero) : max;
+            }, 0);
+            const siguiente = Math.max(1, maxNumero + 1);
+            data.remisionConsecutivo = siguiente;
+            localStorage.setItem(storage.remisionConsecutivo, siguiente);
+            return siguiente;
+        }
+
+        function actualizarConsecutivo() {
+            if (!Number.isFinite(data.remisionConsecutivo) || data.remisionConsecutivo < 1) {
+                data.remisionConsecutivo = 1;
+            }
+            elements.remisionNumero.value = data.remisionConsecutivo;
+        }
+
+        function renderCotizacionesSelect() {
+            elements.selectCotizacion.innerHTML = '<option value="">-- Seleccionar --</option>';
+            data.cotizaciones.forEach(cotizacion => {
+                const option = document.createElement("option");
+                option.value = cotizacion.numero;
+                option.textContent = `#${cotizacion.numero} - ${cotizacion.cliente?.empresa || "Sin cliente"}`;
+                elements.selectCotizacion.appendChild(option);
+            });
+        }
+
+        function renderRemisionesGuardadas() {
+            elements.tablaRemisionesGuardadas.innerHTML = "";
+            data.remisiones.forEach((remision, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${remision.numero}</td>
+                    <td>${remision.cliente?.empresa || remision.cliente?.nombre || "-"}</td>
+                    <td>${remision.fechaEntrega || "-"}</td>
+                    <td>${remision.cotizacionNumero || "-"}</td>
+                    <td>
+                        <button class="btn" style="padding:6px 10px;font-size:12px;" onclick="cargarRemisionGuardada(${index})">Cargar</button>
+                    </td>
+                `;
+                elements.tablaRemisionesGuardadas.appendChild(row);
+            });
+            elements.remisionesCount.textContent = `${data.remisiones.length} remisiones`;
+        }
+
+        function setEditMode(enabled) {
+            editMode = enabled;
+            const table = document.getElementById("tablaRemision");
+            table.classList.toggle("edit-enabled", editMode);
+            elements.btnToggleEdicion.textContent = editMode ? "Bloquear edición" : "Habilitar edición";
+            document.querySelectorAll(".edit-only-block").forEach(node => {
+                node.style.display = editMode ? "inline-flex" : "none";
+            });
+            renderItems();
+        }
+
+        function toggleEdicion() {
+            setEditMode(!editMode);
+        }
+
+        function crearRemisionDesdeCotizacion(cotizacion) {
+            const siguiente = calcularSiguienteRemision();
+            elements.remisionNumero.value = siguiente;
+            return {
+                numero: siguiente,
+                fechaEntrega: elements.fechaEntrega.value || new Date().toISOString().slice(0, 10),
+                vendedor: elements.vendedor.value || "02",
+                cliente: {
+                    empresa: cotizacion.cliente?.empresa || cotizacion.cliente?.nombre || "",
+                    direccion: cotizacion.cliente?.direccion || "",
+                },
+                items: (cotizacion.items || []).map((item, index) => ({
+                    serie: index + 1,
+                    descripcion: item.desc || "",
+                    unidades: 1,
+                    cantidad: item.qty || 1,
+                    comentarios: "",
+                    precio: item.price || 0,
+                })),
+                observacion: `COT ${cotizacion.numero}`,
+                cotizacionNumero: cotizacion.numero,
+                firmaAdjunta: false,
+            };
+        }
+
+        function cargarCotizacionSeleccionada() {
+            const numero = elements.selectCotizacion.value;
+            if (!numero) {
+                alert("Selecciona una cotización para cargar.");
+                return;
+            }
+            const cotizacion = data.cotizaciones.find(cot => String(cot.numero) === String(numero));
+            if (!cotizacion) {
+                alert("No se encontró la cotización seleccionada.");
+                return;
+            }
+            remisionActual = crearRemisionDesdeCotizacion(cotizacion);
+            if (confirm("¿Deseas editar los productos o precios de la cotización cargada?")) {
+                setEditMode(true);
+            } else {
+                setEditMode(false);
+            }
+            actualizarVistaRemision();
+        }
+
+        function cargarRemisionGuardada(index) {
+            const remision = data.remisiones[index];
+            if (!remision) return;
+            remisionActual = JSON.parse(JSON.stringify(remision));
+            elements.remisionNumero.value = remisionActual.numero;
+            elements.fechaEntrega.value = remisionActual.fechaEntrega || "";
+            elements.vendedor.value = remisionActual.vendedor || "";
+            setEditMode(false);
+            actualizarVistaRemision();
+        }
+
+        function actualizarVistaRemision() {
+            if (!remisionActual) {
+                return;
+            }
+            elements.clienteNombre.textContent = remisionActual.cliente?.empresa || remisionActual.cliente?.nombre || "-";
+            elements.clienteDireccion.textContent = remisionActual.cliente?.direccion || "-";
+            elements.remisionEtiqueta.textContent = `REMISIÓN SALIDA DE VENTA: ${remisionActual.numero}`;
+            elements.fechaEntregaTexto.textContent = remisionActual.fechaEntrega || "-";
+            elements.vendedorTexto.textContent = remisionActual.vendedor || "-";
+            elements.observacion.value = remisionActual.observacion || "";
+            elements.fechaEntrega.value = remisionActual.fechaEntrega || new Date().toISOString().slice(0, 10);
+            elements.vendedor.value = remisionActual.vendedor || "02";
+            renderItems();
+            renderFirma();
+        }
+
+        function renderItems() {
+            elements.tablaRemision.innerHTML = "";
+            if (!remisionActual) return;
+            remisionActual.items.forEach((item, index) => {
+                const row = document.createElement("tr");
+
+                const comentarioInput = document.createElement("input");
+                comentarioInput.type = "text";
+                comentarioInput.value = item.comentarios || "";
+                comentarioInput.addEventListener("input", event => {
+                    remisionActual.items[index].comentarios = event.target.value;
+                });
+
+                const descripcionInput = document.createElement("input");
+                descripcionInput.type = "text";
+                descripcionInput.value = item.descripcion || "";
+                descripcionInput.disabled = !editMode;
+                descripcionInput.addEventListener("input", event => {
+                    remisionActual.items[index].descripcion = event.target.value;
+                });
+
+                const unidadesInput = document.createElement("input");
+                unidadesInput.type = "number";
+                unidadesInput.min = "0";
+                unidadesInput.value = item.unidades ?? 1;
+                unidadesInput.disabled = !editMode;
+                unidadesInput.addEventListener("input", event => {
+                    remisionActual.items[index].unidades = Number(event.target.value || 0);
+                });
+
+                const cantidadInput = document.createElement("input");
+                cantidadInput.type = "number";
+                cantidadInput.min = "0";
+                cantidadInput.value = item.cantidad ?? 1;
+                cantidadInput.disabled = !editMode;
+                cantidadInput.addEventListener("input", event => {
+                    remisionActual.items[index].cantidad = Number(event.target.value || 0);
+                });
+
+                const precioInput = document.createElement("input");
+                precioInput.type = "number";
+                precioInput.min = "0";
+                precioInput.value = item.precio ?? 0;
+                precioInput.disabled = !editMode;
+                precioInput.addEventListener("input", event => {
+                    remisionActual.items[index].precio = Number(event.target.value || 0);
+                });
+
+                const accionesTd = document.createElement("td");
+                accionesTd.className = "edit-only";
+                const eliminarBtn = document.createElement("button");
+                eliminarBtn.className = "btn danger";
+                eliminarBtn.style.padding = "4px 8px";
+                eliminarBtn.style.fontSize = "11px";
+                eliminarBtn.textContent = "Eliminar";
+                eliminarBtn.addEventListener("click", () => eliminarFila(index));
+                accionesTd.appendChild(eliminarBtn);
+
+                row.innerHTML = `
+                    <td style="text-align:center;">${index + 1}</td>
+                `;
+                const descripcionTd = document.createElement("td");
+                descripcionTd.appendChild(descripcionInput);
+                const unidadesTd = document.createElement("td");
+                unidadesTd.appendChild(unidadesInput);
+                const cantidadTd = document.createElement("td");
+                cantidadTd.appendChild(cantidadInput);
+                const comentarioTd = document.createElement("td");
+                comentarioTd.appendChild(comentarioInput);
+                const precioTd = document.createElement("td");
+                precioTd.className = "edit-only";
+                precioTd.appendChild(precioInput);
+
+                row.appendChild(descripcionTd);
+                row.appendChild(unidadesTd);
+                row.appendChild(cantidadTd);
+                row.appendChild(comentarioTd);
+                row.appendChild(precioTd);
+                row.appendChild(accionesTd);
+                elements.tablaRemision.appendChild(row);
+            });
+        }
+
+        function agregarFila() {
+            if (!remisionActual) {
+                alert("Primero carga una cotización.");
+                return;
+            }
+            remisionActual.items.push({
+                serie: remisionActual.items.length + 1,
+                descripcion: "",
+                unidades: 1,
+                cantidad: 1,
+                comentarios: "",
+                precio: 0,
+            });
+            renderItems();
+        }
+
+        function eliminarFila(index) {
+            if (!remisionActual) return;
+            remisionActual.items.splice(index, 1);
+            renderItems();
+        }
+
+        function renderFirma() {
+            elements.firmaContainer.innerHTML = "";
+            if (remisionActual?.firmaAdjunta) {
+                const img = document.createElement("img");
+                img.src = "FirmaJP.jpg";
+                img.alt = "Firma JP";
+                img.className = "signature-image";
+                elements.firmaContainer.appendChild(img);
+            }
+        }
+
+        function guardarRemision() {
+            if (!remisionActual) {
+                alert("Primero carga una cotización para crear la remisión.");
+                return;
+            }
+            remisionActual.numero = elements.remisionNumero.value;
+            remisionActual.fechaEntrega = elements.fechaEntrega.value;
+            remisionActual.vendedor = elements.vendedor.value;
+            remisionActual.observacion = elements.observacion.value;
+            remisionActual.items = remisionActual.items.map((item, index) => ({
+                ...item,
+                serie: index + 1,
+            }));
+            const indexExistente = data.remisiones.findIndex(rem => String(rem.numero) === String(remisionActual.numero));
+            const esNueva = indexExistente === -1;
+            if (esNueva) {
+                data.remisiones.push(remisionActual);
+                data.remisionConsecutivo = parseInt(remisionActual.numero, 10) + 1;
+                localStorage.setItem(storage.remisionConsecutivo, data.remisionConsecutivo);
+                elements.remisionNumero.value = data.remisionConsecutivo;
+            } else {
+                data.remisiones[indexExistente] = remisionActual;
+            }
+            persistir(storage.remisiones, data.remisiones);
+            renderRemisionesGuardadas();
+            actualizarVistaRemision();
+            sincronizarSupabaseAutomaticamente();
+
+            if (!remisionActual.firmaAdjunta) {
+                const confirmarFirma = confirm("¿Deseas adjuntar la firma JP a esta remisión?");
+                remisionActual.firmaAdjunta = confirmarFirma;
+                if (confirmarFirma) {
+                    renderFirma();
+                    persistir(storage.remisiones, data.remisiones);
+                }
+            }
+            alert("Remisión guardada correctamente.");
+        }
+
+        function inicializar() {
+            elements.fechaEntrega.value = new Date().toISOString().slice(0, 10);
+            renderCotizacionesSelect();
+            renderRemisionesGuardadas();
+            calcularSiguienteRemision();
+            actualizarConsecutivo();
+            cargarConfigSupabaseEnUI();
+            if (typeof cargarDatosDesdeSupabase === "function") {
+                cargarDatosDesdeSupabase();
+            }
+
+            elements.fechaEntrega.addEventListener("input", () => {
+                if (!remisionActual) return;
+                remisionActual.fechaEntrega = elements.fechaEntrega.value;
+                elements.fechaEntregaTexto.textContent = elements.fechaEntrega.value || "-";
+            });
+
+            elements.vendedor.addEventListener("input", () => {
+                if (!remisionActual) return;
+                remisionActual.vendedor = elements.vendedor.value;
+                elements.vendedorTexto.textContent = elements.vendedor.value || "-";
+            });
+
+            const params = new URLSearchParams(window.location.search);
+            const numeroCotizacion = params.get("cotizacion");
+            if (numeroCotizacion) {
+                elements.selectCotizacion.value = numeroCotizacion;
+                cargarCotizacionSeleccionada();
+            }
+        }
+
+        inicializar();
+    </script>
+</body>
+</html>
