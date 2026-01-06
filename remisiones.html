@@ -318,6 +318,10 @@
         }
 
         .list-card table th { background: #f0f7fb; color: #2b4c63; }
+        .print-header,
+        .print-footer {
+            display: none;
+        }
 
         @media (max-width: 1100px) {
             body { padding: 12px; }
@@ -339,9 +343,43 @@
                 border-radius: 0;
                 width: 11in;
                 min-height: auto;
-                padding: 18px 20px;
+                padding: 72px 20px 54px;
             }
             .edit-only { display: none !important; }
+            .print-header,
+            .print-footer {
+                display: flex;
+                position: fixed;
+                left: 0;
+                right: 0;
+                background: white;
+                color: #2b4c63;
+            }
+            .print-header {
+                top: 0;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 20px;
+                border-bottom: 1px solid var(--border);
+                font-size: 11px;
+                gap: 16px;
+            }
+            .print-header .print-client {
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+            .print-footer {
+                bottom: 0;
+                justify-content: flex-end;
+                padding: 6px 20px;
+                border-top: 1px solid var(--border);
+                font-size: 11px;
+            }
+            .print-page-count::after {
+                content: "Página " counter(page) " de " counter(pages);
+            }
+            body { counter-reset: page; }
         }
 
         @page {
@@ -351,6 +389,17 @@
     </style>
 </head>
 <body>
+    <div class="print-header">
+        <div class="print-client">
+            <div><strong>Cliente:</strong> <span id="printCliente">-</span></div>
+            <div><strong>Remisión:</strong> <span id="printRemision">-</span></div>
+            <div><strong>Entrega:</strong> <span id="printEntrega">-</span></div>
+        </div>
+        <div class="print-page-count"></div>
+    </div>
+    <div class="print-footer">
+        <div class="print-page-count"></div>
+    </div>
     <div class="page">
         <div class="top-bar">
             <div class="brand">
@@ -519,6 +568,9 @@
             remisionesCount: document.getElementById("remisionesCount"),
             tablaRemisionesGuardadas: document.querySelector("#tablaRemisionesGuardadas tbody"),
             btnToggleEdicion: document.getElementById("btnToggleEdicion"),
+            printCliente: document.getElementById("printCliente"),
+            printRemision: document.getElementById("printRemision"),
+            printEntrega: document.getElementById("printEntrega"),
         };
 
         let remisionActual = null;
@@ -787,6 +839,9 @@
             elements.remisionEtiqueta.textContent = `REMISIÓN SALIDA DE VENTA: ${remisionActual.numero}`;
             elements.fechaEntregaTexto.textContent = remisionActual.fechaEntrega || "-";
             elements.vendedorTexto.textContent = remisionActual.vendedor || "-";
+            elements.printCliente.textContent = remisionActual.cliente?.empresa || remisionActual.cliente?.nombre || "-";
+            elements.printRemision.textContent = remisionActual.numero ? `REMISIÓN ${remisionActual.numero}` : "-";
+            elements.printEntrega.textContent = remisionActual.fechaEntrega || "-";
             elements.observacion.value = remisionActual.observacion || "";
             elements.fechaEntrega.value = remisionActual.fechaEntrega || new Date().toISOString().slice(0, 10);
             elements.vendedor.value = remisionActual.vendedor || "02";
@@ -964,6 +1019,7 @@
                 if (!remisionActual) return;
                 remisionActual.fechaEntrega = elements.fechaEntrega.value;
                 elements.fechaEntregaTexto.textContent = elements.fechaEntrega.value || "-";
+                elements.printEntrega.textContent = elements.fechaEntrega.value || "-";
             });
 
             elements.vendedor.addEventListener("input", () => {
