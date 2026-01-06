@@ -508,7 +508,7 @@
             if (supabaseInputs.key) supabaseInputs.key.value = config.key || "";
             if (supabaseInputs.table) supabaseInputs.table.value = config.table || "";
             if (supabaseInputs.record) supabaseInputs.record.value = config.record || "";
-            actualizarEstadoSupabase(config.url && config.key ? "Config cargada" : "Supabase sin configurar");
+            actualizarEstadoSupabase(SupaSync.hasConfig(config) ? "Config cargada" : "Supabase sin configurar");
         }
 
         function obtenerConfigSupabase() {
