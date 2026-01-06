@@ -56,6 +56,7 @@
             <h2 style="color: var(--secondary);">Cotizaciones</h2>
         </div>
 
+        
         <nav>
             <a href="index.html">Cotización</a>
             <a class="active" href="cotizaciones.html">Cotizaciones</a>
@@ -103,6 +104,8 @@
             articulos: "inquiserco_articulos",
             clientes: "inquiserco_clientes",
             consecutivo: "inquiserco_consecutivo",
+            remisiones: "inquiserco_remisiones",
+            remisionConsecutivo: "inquiserco_remision_consecutivo",
         };
         const data = {
             cotizaciones: JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]"),
@@ -139,6 +142,8 @@
             clientes: JSON.parse(localStorage.getItem(storage.clientes) || "[]"),
             cotizaciones: data.cotizaciones,
             consecutivo: calcularSiguienteConsecutivo(),
+            remisiones: JSON.parse(localStorage.getItem(storage.remisiones) || "[]"),
+            remisionConsecutivo: parseInt(localStorage.getItem(storage.remisionConsecutivo) || "1", 10),
         });
     
         function exportarDatos() {
@@ -161,9 +166,16 @@
             localStorage.setItem(storage.cotizaciones, JSON.stringify(data.cotizaciones));
             if (contenido.articulos) localStorage.setItem(storage.articulos, JSON.stringify(contenido.articulos));
             if (contenido.clientes) localStorage.setItem(storage.clientes, JSON.stringify(contenido.clientes));
+            if (Array.isArray(contenido.remisiones)) {
+                localStorage.setItem(storage.remisiones, JSON.stringify(contenido.remisiones));
+            }
             if (Number.isFinite(contenido.consecutivo)) {
                 const consecutivoRestaurado = Math.max(1, contenido.consecutivo);
                 localStorage.setItem(storage.consecutivo, consecutivoRestaurado);
+            }
+            if (Number.isFinite(contenido.remisionConsecutivo)) {
+                const consecutivoRemision = Math.max(1, contenido.remisionConsecutivo);
+                localStorage.setItem(storage.remisionConsecutivo, consecutivoRemision);
             }
             calcularSiguienteConsecutivo();
             renderCotizaciones();
@@ -289,6 +301,10 @@
             window.location.href = "index.html";
         }
 
+        function crearRemision(numero) {
+            window.location.href = `remisiones.html?cotizacion=${numero}`;
+        }
+
         function borrarCotizacion(index) {
             if (!confirm("¿Eliminar esta cotización guardada?")) return;
             data.cotizaciones.splice(index, 1);
@@ -323,6 +339,7 @@
                         <div class="table-actions">
                             <button class="btn primary" style="padding:6px 10px;font-size:12px;" onclick="cargarCotizacion(${cotizacion.numero})">Cargar</button>
                             <button class="btn secondary" style="padding:6px 10px;font-size:12px;" onclick="borrarCotizacion(${index})">Borrar</button>
+                            <button class="btn secondary" style="padding:6px 10px;font-size:12px;" onclick="crearRemision(${cotizacion.numero})">Remisión</button>
                         </div>
                     </td>`;
                 tbody.appendChild(row);
