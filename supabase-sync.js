@@ -5,17 +5,22 @@
         key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4ZmVocWZrY3Roc212cGVnemZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3MDYzMTksImV4cCI6MjA4MDI4MjMxOX0.jEC9vCZy7_XElSnQWMx2D2C0R_l1JCvwhwvjkDGcrEs",
         table: "inquiserco_respaldo",
         record: "principal",
+        enabled: false,
     };
 
     let cachedClient = null;
     let cachedSignature = "";
 
-    const hasConfig = (config) => Boolean(config?.url && config?.key);
+    const hasConfig = (config) => Boolean(config?.enabled && config?.url && config?.key);
 
     function loadConfig() {
         try {
             const saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}") || {};
-            return { ...DEFAULTS, ...saved };
+            const normalized = { ...DEFAULTS, ...saved };
+            if (typeof saved.enabled !== "boolean") {
+                normalized.enabled = Boolean(normalized.url && normalized.key);
+            }
+            return normalized;
         } catch (error) {
             console.error("No se pudo leer la configuración de Supabase", error);
             return { ...DEFAULTS };
@@ -24,6 +29,9 @@
 
     function saveConfig(config) {
         const normalized = { ...DEFAULTS, ...config };
+        if (typeof config?.enabled !== "boolean") {
+            normalized.enabled = Boolean(normalized.url && normalized.key);
+        }
         localStorage.setItem(CONFIG_KEY, JSON.stringify(normalized));
         cachedClient = null;
         cachedSignature = "";
