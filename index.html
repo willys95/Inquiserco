@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotización - Inquiserco</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-sync.js"></script>
+    <style>
+        :root {
+            --primary: #0296c2;
+            --secondary: #0066a1;
+            --accent: #00b4e5;
+            --text: #262626;
+            --muted: #f2f7fb;
+            --border: #d9e5f0;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background: #eef2f6;
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+        }
+
+        h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: 0.2px; }
+
+        .page {
+            width: 8.5in;
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 32px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.15);
+            border-radius: 12px;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 18px;
+            margin-bottom: 18px;
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-mark { width: 64px; height: 64px; padding: 8px; border-radius: 50%; background: white; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08); object-fit: contain; display: block; }
+        .brand-name { display: flex; flex-direction: column; gap: 4px; }
+        .brand-name small { text-transform: uppercase; font-size: 12px; color: #4a5568; letter-spacing: 1px; }
+        .quote-title { font-size: 26px; color: var(--secondary); letter-spacing: 1px; }
+
+        nav { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        nav a { text-decoration: none; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); color: var(--secondary); font-weight: 700; background: #f8fbff; }
+        nav a.active { background: linear-gradient(135deg, var(--secondary), var(--accent)); color: white; border-color: transparent; }
+        .backup-card { border: 1px dashed var(--border); padding: 12px 14px; border-radius: 10px; background: #f8fbff; margin: 12px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .supabase-panel { display: none; }
+        .backup-card p { margin: 0; color: #2b4c63; font-weight: 600; }
+        .supabase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 12px; width: 100%; }
+        .supabase-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: #4a5568; }
+        .supabase-grid input { padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border); font-size: 13px; }
+        .supabase-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+        .meta-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px 28px; padding: 12px 16px; border: 1px solid var(--border); background: var(--muted); border-radius: 10px; margin-bottom: 18px; }
+        .meta-grid label { font-size: 12px; font-weight: 700; color: #4a5568; letter-spacing: 0.3px; }
+        .meta-grid input, .meta-grid select { width: 100%; padding: 9px 10px; margin-top: 6px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+
+        .section-title { background: var(--secondary); color: white; padding: 10px 14px; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; border-radius: 8px 8px 0 0; }
+        .info-card { border: 1px solid var(--border); border-top: 0; border-radius: 0 0 8px 8px; padding: 14px 16px 10px; margin-bottom: 18px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 6px 18px; }
+        .info-row { display: flex; gap: 8px; font-size: 14px; align-items: baseline; }
+        .info-label { min-width: 120px; color: #4a5568; font-weight: 700; letter-spacing: 0.2px; }
+        .input-lite { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 14px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { border: 1px solid var(--border); padding: 10px 12px; font-size: 14px; vertical-align: top; }
+        th { background: #f0f7fb; color: #2b4c63; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 800; }
+        tbody tr:nth-child(even) { background: white; }
+
+        .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .btn { padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; letter-spacing: 0.3px; transition: transform 0.1s ease, box-shadow 0.15s ease; }
+        .btn.primary { background: linear-gradient(135deg, var(--secondary), var(--accent)); color: white; box-shadow: 0 12px 24px rgba(0, 150, 199, 0.25); }
+        .btn.secondary { background: white; color: var(--secondary); border: 1px solid var(--border); }
+        .btn:hover { transform: translateY(-1px); }
+
+        .items-form { display: grid; grid-template-columns: 1fr 2fr repeat(2, 1fr) 140px; gap: 10px; padding: 10px 12px; background: var(--muted); border: 1px solid var(--border); border-radius: 8px; align-items: end; margin-bottom: 12px; }
+        .items-form label { font-size: 12px; font-weight: 700; color: #4a5568; display: block; margin-bottom: 4px; }
+        .items-form input, .items-form select { width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border); font-size: 14px; }
+
+        .totals { width: 320px; margin-left: auto; margin-top: 12px; }
+        .totals tr td:last-child { text-align: right; font-weight: 700; }
+        .totals tr:last-child td { font-size: 17px; color: var(--secondary); }
+        .totals .negative { color: #b42318; }
+        .discount-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+        .discount-controls label { font-size: 12px; font-weight: 700; color: #4a5568; display: block; margin-bottom: 4px; }
+        .discount-controls select, .discount-controls input { width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border); font-size: 14px; }
+        .discount-hint { align-self: end; color: #425466; font-size: 12px; background: #f8fbff; border: 1px dashed var(--border); padding: 8px 10px; border-radius: 8px; }
+
+        .notes { background: var(--muted); border: 1px dashed var(--border); padding: 10px 12px; border-radius: 8px; font-size: 13px; color: #425466; white-space: pre-line; }
+        .signature-block { margin-top: 14px; }
+        .signature-label { font-size: 12px; color: #4a5568; font-weight: 700; text-align: center; }
+        .signature-line { margin-top: 14px; border-top: 1px solid var(--border); position: relative; padding-top: 12px; text-align: center; }
+        .signature-line span { position: relative; top: -10px; background: white; padding: 0 12px; font-weight: 700; color: var(--secondary); }
+        .footer { text-align: center; margin-top: 22px; color: #2b4c63; font-weight: 700; }
+        .badge { padding: 3px 8px; background: var(--muted); border-radius: 999px; border: 1px solid var(--border); font-size: 11px; color: #2b4c63; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+        .pdf-hidden { display: none !important; }
+        .print-template { display: none; background: linear-gradient(180deg, #f6fbff 0%, #ffffff 22%); }
+        .print-template.page { padding: 28px 32px 32px; }
+        .print-template.active-print { display: block; position: absolute; left: 50%; transform: translateX(-50%); top: 0; z-index: 10; }
+        .print-template .top-bar { margin-bottom: 10px; }
+        .print-template .meta-grid { background: #f7fbff; border: 1px solid #cbd9e8; }
+        .print-template .info-card { border-color: #cbd9e8; }
+        .print-template .section-title { background: var(--secondary); }
+        
+        @media (max-width: 900px) {
+            body { padding: 12px; }
+            .page { padding: 20px; }
+            .items-form { grid-template-columns: 1fr; }
+            .meta-grid { grid-template-columns: 1fr; }
+            .totals { width: 100%; }
+        }
+
+        @media print {
+            body { padding: 0; background: white; }
+            .page { box-shadow: none; border-radius: 0; width: 8.5in; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="top-bar">
+            <div class="brand">
+                <img src="Imagen1.jpg" alt="Logo de INQUISERCO" class="brand-mark" />
+                <div class="brand-name">
+                    <h3>INQUISERCO</h3>
+                    <small>Insumos Quimicos y Servicios de la Costa S.A.S</small>
+                </div>
+            </div>
+            <div class="quote-title">COTIZACIÓN</div>
+        </div>
+
+        <nav class="hide-on-pdf">
+            <a class="active" href="index.html">Cotización</a>
+            <a href="cotizaciones.html">Cotizaciones</a>
+            <a href="articulos.html">Artículos</a>
+            <a href="clientes.html">Clientes</a>
+        </nav>
+
+        <div class="backup-card hide-on-pdf supabase-panel" style="flex-direction: column; align-items: flex-start;">
+            <p>Sincroniza tus datos en Supabase (guarda/recupera en la nube).</p>
+            <p class="badge" style="background:#e6f4ff;color:#0f4f71;">Supabase configurado automáticamente para INQUISERCO.</p>
+            <div class="sr-only" aria-hidden="true">
+                <input id="supabaseUrl" type="hidden" value="https://uxfehqfkcthsmvpegzfn.supabase.co" />
+                <input id="supabaseKey" type="hidden" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4ZmVocWZrY3Roc212cGVnemZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3MDYzMTksImV4cCI6MjA4MDI4MjMxOX0.jEC9vCZy7_XElSnQWMx2D2C0R_l1JCvwhwvjkDGcrEs" />
+                <input id="supabaseTable" type="hidden" value="inquiserco_respaldo" />
+                <input id="supabaseRecord" type="hidden" value="principal" />
+            </div>
+            <div class="supabase-actions">
+                <button class="btn secondary" onclick="probarSupabase()">Probar conexión</button>
+                <button class="btn secondary" onclick="descargarDesdeSupabase()">Descargar desde Supabase</button>
+                <button class="btn primary" onclick="subirASupabase()">Subir a Supabase</button>
+                <span class="badge" id="supabaseStatus">Supabase sin configurar</span>
+            </div>
+        </div>
+
+        <div class="meta-grid">
+            <div>
+                <label for="quoteNumber">N° de Cotización</label>
+                <input id="quoteNumber" type="text" readonly />
+            </div>
+            <div>
+                <label for="issueDate">Fecha</label>
+                <input id="issueDate" type="date" />
+            </div>
+            <div>
+                <label for="validity">Validez hasta</label>
+                <input id="validity" type="date" />
+            </div>
+            <div>
+                <label for="currency">Moneda</label>
+                <select id="currency">
+                    <option value="COP" selected>Peso colombiano (COP)</option>
+                    <option value="USD">Dólar estadounidense (USD)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="section-title">Datos de la empresa</div>
+        <div class="info-card">
+            <div class="info-grid">
+                <div class="info-row"><span class="info-label">Empresa:</span><span>Insumos Quimicos y Servicios de la Costa S.A.S</span></div>
+                <div class="info-row"><span class="info-label">Teléfono:</span><span>3137200908</span></div>
+                <div class="info-row"><span class="info-label">NIT:</span><span>901875715-0</span></div>
+                <div class="info-row"><span class="info-label">Correo:</span><span>inquiserco@gmail.com</span></div>
+                <div class="info-row"><span class="info-label">Ciudad:</span><span>Barranquilla</span></div>
+            </div>
+        </div>
+
+        <div class="section-title">Datos del cliente</div>
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Seleccionar</span>
+                <select class="input-lite" id="selectCliente"></select>
+                <span class="badge" id="clientesCount">0 registrados</span>
+            </div>
+            <div class="info-row"><span class="info-label">Cliente:</span><input class="input-lite" id="clientName" placeholder="Nombre del cliente" /></div>
+            <div class="info-row"><span class="info-label">Dirección:</span><input class="input-lite" id="clientAddress" placeholder="Dirección del cliente" /></div>
+            <div class="info-row"><span class="info-label">Teléfono:</span><input class="input-lite" id="clientPhone" placeholder="Teléfono" /></div>
+            <div class="info-row"><span class="info-label">Correo:</span><input class="input-lite" id="clientEmail" placeholder="Correo" /></div>
+            <div class="info-row"><span class="info-label">Ciudad / sede:</span><input class="input-lite" id="clientCity" placeholder="Ciudad o sede" /></div>
+        </div>
+
+        <div class="section-title">Cuerpo</div>
+        <div class="info-card">
+            <div class="items-form">
+                <div>
+                    <label for="itemCode">Ítem</label>
+                    <input id="itemCode" type="text" placeholder="Código" />
+                </div>
+                <div>
+                    <label for="itemDesc">Descripción</label>
+                    <select id="itemDesc"></select>
+                </div>
+                <div>
+                    <label for="itemQty">Cantidad</label>
+                    <input id="itemQty" type="number" min="1" value="1" />
+                </div>
+                <div>
+                    <label for="itemPrice">Precio unitario</label>
+                    <input id="itemPrice" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="actions">
+                    <button class="btn secondary" onclick="limpiarItem()">Limpiar</button>
+                    <button class="btn primary" onclick="agregarItem()">Agregar ítem</button>
+                </div>
+            </div>
+
+            <table id="itemsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 90px;">Ítem</th>
+                        <th>Descripción</th>
+                        <th style="width: 90px;">Cantidad</th>
+                        <th style="width: 140px;">P. Unitario</th>
+                        <th style="width: 140px;">Total</th>
+                        <th style="width: 80px;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div class="discount-controls">
+                <div>
+                    <label for="discountType">Tipo de descuento</label>
+                    <select id="discountType">
+                        <option value="percent">Porcentaje (%)</option>
+                        <option value="value">Valor fijo</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="discountValue">Valor del descuento</label>
+                    <input id="discountValue" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="discount-hint">Aplicado sobre el subtotal.</div>
+            </div>
+
+            <table class="totals">
+                <tr><td>Subtotal</td><td id="subtotal">$0</td></tr>
+                <tr><td>IVA (19%)</td><td id="iva">$0</td></tr>
+                <tr><td>Descuento <span class="badge" id="discountLabel">0%</span></td><td id="discountAmount" class="negative">-$0</td></tr>
+                <tr><td>Total</td><td id="total">$0</td></tr>
+            </table>
+        </div>
+
+        <div class="section-title">Notas y observaciones</div>
+        <div class="info-card">
+            <div id="notes" class="notes" contenteditable="true">
+                Esta cotización está sujeta a los términos y condiciones que
+                se enuncian a continuación:
+                1. Duración de la oferta: 15 días.
+                2. Para iniciar la producción o servicio se realizará el
+                anticipo del 50%.
+                3. Entregado el trabajo o ejecutado el servicio no existen
+                devoluciones.
+            </div>
+
+            </div>
+
+        <div class="signature-block">
+            <div class="signature-line"><span id="signatureName">Nombre del cliente</span></div>
+            <div class="signature-label">Aceptado por</div>
+        </div>
+
+        <div class="actions hide-on-pdf" style="justify-content: flex-end;">
+            <button class="btn primary" onclick="generarPDFConGuardado()">Generar PDF</button>
+        </div>
+        
+        <div class="footer">¡Gracias por tu preferencia!</div>
+    </div>
+
+    <div class="print-template page">
+        </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        // --- Variables DOM ---
+        const currencyElement = document.getElementById("currency");
+        const tableBody = document.querySelector("#itemsTable tbody");
+        const subtotalEl = document.getElementById("subtotal");
+        const ivaEl = document.getElementById("iva");
+        const totalEl = document.getElementById("total");
+        const discountTypeEl = document.getElementById("discountType");
+        const discountValueEl = document.getElementById("discountValue");
+        const discountLabelEl = document.getElementById("discountLabel");
+        const discountAmountEl = document.getElementById("discountAmount");
+        const notesElement = document.getElementById("notes");
+
+        const DEFAULT_NOTES = [
+            "Esta cotización está sujeta a los términos y condiciones que",
+            "se enuncian a continuación:",
+            "1. Duración de la oferta: 15 días.",
+            "2. Para iniciar la producción o servicio se realizará el",
+            "anticipo del 50%.",
+            "3. Entregado el trabajo o ejecutado el servicio no existen",
+            "devoluciones."
+        ].join("\n");
+        
+        const selectCliente = document.getElementById("selectCliente");
+        const selectArticulo = document.getElementById("itemDesc");
+        const itemCodeInput = document.getElementById("itemCode");
+        const itemQtyInput = document.getElementById("itemQty");
+        const itemPriceInput = document.getElementById("itemPrice");
+
+        // --- Configuración de Almacenamiento ---
+        const storage = {
+            articulos: "inquiserco_articulos",
+            clientes: "inquiserco_clientes",
+            cotizaciones: "inquiserco_cotizaciones",
+            cotizacionPendiente: "inquiserco_cotizacion_pendiente",
+            consecutivo: "inquiserco_consecutivo",
+        };
+
+        const supabaseInputs = {
+            url: document.getElementById("supabaseUrl"),
+            key: document.getElementById("supabaseKey"),
+            table: document.getElementById("supabaseTable"),
+            record: document.getElementById("supabaseRecord"),
+            status: document.getElementById("supabaseStatus"),
+        };
+
+        // --- Datos Locales ---
+        const data = {
+            articulos: JSON.parse(localStorage.getItem(storage.articulos) || "[]"),
+            clientes: JSON.parse(localStorage.getItem(storage.clientes) || "[]"),
+            cotizaciones: JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]"),
+            consecutivo: parseInt(localStorage.getItem(storage.consecutivo) || "113", 10),
+        };
+        let cotizacionCargadaNumero = null;
+
+        // --- Utilidades de Formato ---
+        const formatCurrency = (value, currency = currencyElement.value) => new Intl.NumberFormat("es-CO", {
+            style: "currency",
+            currency,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(value);
+
+        const formatter = () => new Intl.NumberFormat("es-CO", {
+            style: "currency",
+            currency: currencyElement.value,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        });
+
+        const formatDiscountLabel = (descuento, currencyOverride = currencyElement.value) => {
+            if (!descuento) return "0%";
+            return descuento.tipo === "percent" 
+                ? `${(descuento.valor || 0).toLocaleString("es-CO", { maximumFractionDigits: 2 })}%`
+                : formatCurrency(descuento.valor || 0, currencyOverride);
+        };
+
+        const obtenerConfiguracionDescuento = () => ({
+            tipo: discountTypeEl.value,
+            valor: parseFloat(discountValueEl.value) || 0
+        });
+
+        const calcularMontoDescuento = (subtotal, iva, descuento) => {
+            if (!descuento || descuento.valor <= 0) return 0;
+            if (descuento.tipo === "percent") {
+                return subtotal * (descuento.valor / 100);
+            }
+            // Si es valor fijo, se aplica sobre el subtotal+IVA (total bruto)
+            const totalBruto = subtotal + iva;
+            return Math.min(descuento.valor, totalBruto);
+        };
+        
+        // --- Funciones del Formulario ---
+        function initFechas() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("issueDate").value = today;
+
+            const validityDate = new Date();
+            validityDate.setDate(validityDate.getDate() + 30); // 30 días de validez
+            document.getElementById("validity").value = validityDate.toISOString().split('T')[0];
+        }
+
+        function refrescarConsecutivoInicial() {
+            document.getElementById("quoteNumber").value = data.consecutivo;
+        }
+
+        function siguienteConsecutivo() {
+            data.consecutivo += 1;
+            persistir(storage.consecutivo, data.consecutivo);
+            refrescarConsecutivoInicial();
+        }
+
+        function limpiarItem() {
+            itemCodeInput.value = "";
+            selectArticulo.value = "";
+            itemQtyInput.value = 1;
+            itemPriceInput.value = 0;
+        }
+
+        function prepararFila(row, item) {
+            const total = item.qty * item.price;
+            row.dataset.qty = item.qty;
+            row.dataset.price = item.price;
+            
+            row.innerHTML = `
+                <td>${item.code || ""}</td>
+                <td>${item.desc}</td>
+                <td style="text-align:center;">${item.qty.toLocaleString("es-CO")}</td>
+                <td style="text-align:right;">${formatCurrency(item.price)}</td>
+                <td style="text-align:right;">${formatCurrency(total)}</td>
+                <td><button class="btn secondary" style="padding:4px 8px;font-size:12px;" onclick="borrarFila(this)">X</button></td>
+            `;
+        }
+
+        function agregarItem() {
+            const code = document.getElementById("itemCode").value.trim();
+            const desc = selectArticulo.options[selectArticulo.selectedIndex]?.text?.trim() || selectArticulo.value.trim();
+            const qty = parseFloat(document.getElementById("itemQty").value);
+            const price = parseFloat(document.getElementById("itemPrice").value);
+
+            if (!desc || Number.isNaN(qty) || Number.isNaN(price)) {
+                alert("Completa los datos del ítem.");
+                return;
+            }
+
+            const row = document.createElement("tr");
+            prepararFila(row, { code, desc, qty, price });
+            tableBody.appendChild(row);
+            limpiarItem();
+            calcularTotales();
+        }
+
+        function insertarFila(item) {
+            const row = document.createElement("tr");
+            prepararFila(row, item);
+            tableBody.appendChild(row);
+        }
+
+        function borrarFila(button) {
+            button.closest("tr").remove();
+            calcularTotales();
+        }
+
+        function calcularTotales() {
+            const items = obtenerItems();
+            const subtotal = items.reduce((acc, item) => acc + (item.qty * item.price), 0);
+            const iva = subtotal * 0.19;
+            const descuento = obtenerConfiguracionDescuento();
+            const montoDescuento = calcularMontoDescuento(subtotal, iva, descuento);
+            const totalBruto = subtotal + iva;
+            const total = Math.max(totalBruto - montoDescuento, 0);
+
+            subtotalEl.textContent = formatCurrency(subtotal);
+            ivaEl.textContent = formatCurrency(iva);
+            discountLabelEl.textContent = formatDiscountLabel(descuento);
+            discountAmountEl.textContent = `-${formatCurrency(montoDescuento)}`;
+            totalEl.textContent = formatCurrency(total);
+
+            return {
+                subtotal,
+                iva,
+                total,
+                descuento: { ...descuento, monto: montoDescuento }
+            };
+        }
+
+        function cambiarMoneda() {
+            const items = obtenerItems();
+            // Esto asegura que la columna de precio unitario se actualice con la nueva moneda
+            tableBody.innerHTML = "";
+            items.forEach(insertarFila);
+            calcularTotales();
+        }
+
+        const persistir = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+
+        function calcularSiguienteConsecutivo() {
+            const consecutivoMayorEnCotizaciones = data.cotizaciones.reduce((max, cot) => {
+                const numero = parseInt(cot.numero, 10);
+                return Number.isFinite(numero) ? Math.max(max, numero) : max;
+            }, 0);
+
+            const siguienteDisponible = Math.max(1, consecutivoMayorEnCotizaciones + 1);
+
+            if (siguienteDisponible !== data.consecutivo) {
+                data.consecutivo = siguienteDisponible;
+                localStorage.setItem(storage.consecutivo, data.consecutivo);
+            }
+        }
+
+        const construirSnapshot = () => ({
+            version: 1,
+            generado: new Date().toISOString(),
+            articulos: data.articulos,
+            clientes: data.clientes,
+            cotizaciones: data.cotizaciones,
+            consecutivo: data.consecutivo,
+        });
+
+        function restaurarDesdeBackup(contenido, { silenciarAlertas = false } = {}) {
+            if (!Array.isArray(contenido.articulos) || !Array.isArray(contenido.clientes) || !Array.isArray(contenido.cotizaciones)) {
+                alert("El archivo no tiene el formato esperado.");
+                return;
+            }
+
+            data.articulos = contenido.articulos;
+            data.clientes = contenido.clientes;
+            data.cotizaciones = contenido.cotizaciones;
+
+            persistir(storage.articulos, data.articulos);
+            persistir(storage.clientes, data.clientes);
+            persistir(storage.cotizaciones, data.cotizaciones);
+
+            if (Number.isFinite(contenido.consecutivo)) {
+                data.consecutivo = Math.max(1, contenido.consecutivo);
+            }
+
+            persistir(storage.consecutivo, data.consecutivo);
+
+            renderSelectArticulos();
+            renderSelectClientes();
+            calcularSiguienteConsecutivo();
+            refrescarConsecutivoInicial();
+            calcularTotales();
+
+            if (!silenciarAlertas) {
+                alert("Datos importados correctamente.");
+            }
+        }
+
+        function obtenerItems() {
+            const rows = document.querySelectorAll("#itemsTable tbody tr");
+            return Array.from(rows).map(row => ({
+                code: row.cells[0].textContent,
+                desc: row.cells[1].textContent,
+                qty: parseFloat(row.dataset.qty),
+                price: parseFloat(row.dataset.price),
+            }));
+        }
+
+        function actualizarFirmaCliente(nombre) {
+            const name = nombre || "Nombre del cliente";
+            document.getElementById("signatureName").textContent = name;
+        }
+
+        function renderSelectArticulos() {
+            selectArticulo.innerHTML = '<option value="">-- Seleccionar o escribir --</option>';
+            data.articulos.forEach(art => {
+                const opt = document.createElement("option");
+                opt.value = art.nombre;
+                opt.text = art.nombre;
+                selectArticulo.appendChild(opt);
+            });
+        }
+
+        function renderSelectClientes() {
+            selectCliente.innerHTML = '<option value="">-- Seleccionar --</option>';
+            data.clientes.forEach((cli, idx) => {
+                const opt = document.createElement("option");
+                opt.value = idx;
+                opt.text = cli.empresa || cli.nombre;
+                selectCliente.appendChild(opt);
+            });
+            document.getElementById("clientesCount").textContent = `${data.clientes.length} registrados`;
+        }
+
+        function asegurarClienteEnLista(cliente) {
+            const nombreClave = (cliente.empresa || cliente.nombre || "").toLowerCase();
+            if (!nombreClave) return;
+
+            const existe = data.clientes.some(cli => (cli.empresa || cli.nombre || "").toLowerCase() === nombreClave);
+            if (existe) return;
+
+            data.clientes.push({
+                empresa: cliente.empresa || cliente.nombre || "",
+                nombre: cliente.nombre || "",
+                direccion: cliente.direccion || "",
+                telefono: cliente.telefono || "",
+                correo: cliente.correo || "",
+                sede: cliente.ciudad || "",
+            });
+
+            persistir(storage.clientes, data.clientes);
+            renderSelectClientes();
+        }
+        
+        // Listeners (sin cambios)
+        selectCliente.addEventListener("change", () => {
+            const idx = selectCliente.value;
+            if (idx === "") return;
+            const cli = data.clientes[idx];
+            document.getElementById("clientName").value = cli.empresa || "";
+            document.getElementById("clientAddress").value = cli.direccion || "";
+            document.getElementById("clientPhone").value = cli.telefono || "";
+            document.getElementById("clientEmail").value = cli.correo || "";
+            document.getElementById("clientCity").value = cli.sede || "";
+            actualizarFirmaCliente(cli.empresa);
+        });
+
+        document.getElementById("clientName").addEventListener("input", (e) => {
+            actualizarFirmaCliente(e.target.value);
+        });
+
+        selectArticulo.addEventListener("change", () => {
+            const val = selectArticulo.value;
+            const art = data.articulos.find(a => a.nombre === val);
+            if (art) {
+                document.getElementById("itemCode").value = art.codigo || "";
+                document.getElementById("itemPrice").value = art.venta || 0;
+            }
+        });
+
+        discountTypeEl.addEventListener("change", calcularTotales);
+        discountValueEl.addEventListener("input", calcularTotales);
+        currencyElement.addEventListener("change", cambiarMoneda);
+
+        /* -------------------------------------------------------------
+           LÓGICA DE CARGA Y GUARDADO
+           ------------------------------------------------------------- */
+
+        function cargarCotizacionPorIndice(index) {
+            const cotizacion = data.cotizaciones[index];
+            if (!cotizacion) return;
+
+            asegurarClienteEnLista(cotizacion.cliente || {});
+            renderSelectClientes();
+
+            cotizacionCargadaNumero = cotizacion.numero;
+
+            // 1. Cargar metadatos
+            document.getElementById("quoteNumber").value = cotizacion.numero || "";
+            document.getElementById("issueDate").value = cotizacion.fecha || "";
+            document.getElementById("validity").value = cotizacion.validez || "";
+            document.getElementById("currency").value = cotizacion.moneda || "COP";
+            
+            // 2. Cargar datos del cliente
+            document.getElementById("clientName").value = cotizacion.cliente?.nombre || cotizacion.cliente?.empresa || "";
+            document.getElementById("clientAddress").value = cotizacion.cliente?.direccion || "";
+            document.getElementById("clientPhone").value = cotizacion.cliente?.telefono || "";
+            document.getElementById("clientEmail").value = cotizacion.cliente?.correo || "";
+            document.getElementById("clientCity").value = cotizacion.cliente?.ciudad || "";
+            actualizarFirmaCliente(cotizacion.cliente?.nombre || cotizacion.cliente?.empresa);
+
+            const clienteBuscado = (cotizacion.cliente?.empresa || cotizacion.cliente?.nombre || "").toLowerCase();
+            const idxCliente = data.clientes.findIndex(cli =>
+                (cli.empresa || cli.nombre || "").toLowerCase() === clienteBuscado
+            );
+            selectCliente.value = idxCliente >= 0 ? String(idxCliente) : "";
+
+            // 3. Cargar descuento y notas
+            document.getElementById("discountType").value = cotizacion.descuento?.tipo || "percent";
+            document.getElementById("discountValue").value = cotizacion.descuento?.valor || 0;
+            notesElement.textContent = cotizacion.notas || DEFAULT_NOTES;
+
+            // 4. Cargar items (vaciar y rellenar)
+            tableBody.innerHTML = "";
+            if (cotizacion.items && Array.isArray(cotizacion.items)) {
+                cotizacion.items.forEach(insertarFila);
+            }
+
+            // 5. Recalcular para actualizar los campos de totales visibles
+            calcularTotales();
+        }
+
+        function guardarCotizacion() {
+            const items = obtenerItems();
+            if (items.length === 0) {
+                alert("La cotización debe tener al menos un artículo.");
+                return null;
+            }
+
+            const totales = calcularTotales();
+            const descuento = obtenerConfiguracionDescuento();
+            const selectClienteEl = document.getElementById("selectCliente");
+            const indiceClienteSeleccionado = selectClienteEl.value;
+            const clienteSeleccionado = indiceClienteSeleccionado !== "" ? data.clientes[indiceClienteSeleccionado] : null;
+            const clienteEmpresaDesdeSelect =
+                indiceClienteSeleccionado !== ""
+                    ? selectClienteEl.options[selectClienteEl.selectedIndex]?.text
+                    : "";
+            const clienteEmpresa =
+                (clienteEmpresaDesdeSelect && clienteEmpresaDesdeSelect !== "-- Seleccionar --")
+                    ? clienteEmpresaDesdeSelect
+                    : document.getElementById("clientName").value || "";
+
+            const numeroFormulario = document.getElementById("quoteNumber").value;
+            const numeroCotizacion = cotizacionCargadaNumero ?? numeroFormulario;
+            document.getElementById("quoteNumber").value = numeroCotizacion;
+
+            const cotizacion = {
+                numero: numeroCotizacion,
+                fecha: document.getElementById("issueDate").value,
+                validez: document.getElementById("validity").value,
+                moneda: document.getElementById("currency").value,
+                cliente: {
+                    empresa: clienteEmpresa,
+                    nombre: document.getElementById("clientName").value || clienteSeleccionado?.nombre || "",
+                    direccion: document.getElementById("clientAddress").value || clienteSeleccionado?.direccion || "",
+                    telefono: document.getElementById("clientPhone").value || clienteSeleccionado?.telefono || "",
+                    correo: document.getElementById("clientEmail").value || clienteSeleccionado?.correo || "",
+                    ciudad: document.getElementById("clientCity").value || clienteSeleccionado?.sede || "",
+                },
+                items: items,
+                descuento: descuento,
+                notas: notesElement.textContent,
+                totales: totales,
+            };
+
+            asegurarClienteEnLista(cotizacion.cliente);
+
+            const indexExistente = data.cotizaciones.findIndex(c => String(c.numero) === cotizacion.numero);
+            const esNueva = indexExistente === -1;
+
+            if (esNueva) {
+                data.cotizaciones.push(cotizacion);
+            } else {
+                data.cotizaciones[indexExistente] = cotizacion;
+            }
+
+            persistir(storage.cotizaciones, data.cotizaciones);
+
+            // Solo avanzar el consecutivo cuando se crea una cotización nueva
+            if (esNueva) {
+                siguienteConsecutivo();
+            }
+
+            cotizacionCargadaNumero = cotizacion.numero;
+            // Sincronizar Supabase
+            if (typeof sincronizarSupabaseAutomaticamente === 'function') {
+                sincronizarSupabaseAutomaticamente();
+            }
+
+            return cotizacion.numero;
+        }
+        
+        // 🟢 NUEVA FUNCIÓN: Guarda y luego genera el PDF
+        async function generarPDFConGuardado() {
+            const numeroActual = String(document.getElementById("quoteNumber").value || "");
+            const cotizacionYaGuardada =
+                cotizacionCargadaNumero && String(cotizacionCargadaNumero) === numeroActual &&
+                data.cotizaciones.some(c => String(c.numero) === numeroActual);
+
+            let numeroParaPDF = numeroActual;
+
+            if (!cotizacionYaGuardada) {
+                const numeroGuardado = guardarCotizacion();
+                if (!numeroGuardado) return;
+                numeroParaPDF = String(numeroGuardado);
+            }
+
+            // Asegurar que el PDF use el número realmente guardado
+            document.getElementById("quoteNumber").value = numeroParaPDF;
+
+            await generarPDF();
+            limpiarFormulario();
+        }
+
+        /* -------------------------------------------------------------
+           LÓGICA DE PDF MEJORADA (JSPDF + AUTOTABLE)
+           ------------------------------------------------------------- */
+        
+        async function getLogoBase64() {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+                    resolve(dataURL.split(',')[1]); 
+                };
+                img.onerror = reject;
+                img.src = 'Imagen1.jpg'; // Reemplaza con la ruta de tu logo si es diferente
+            });
+        }
+
+        async function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.width;
+            const colorSecondary = [0, 102, 161]; // --secondary
+            const logoBase64 = await getLogoBase64().catch(() => null);
+
+            // --- DATOS DEL DOCUMENTO ---
+            const nCotizacion = document.getElementById("quoteNumber").value;
+            const fecha = document.getElementById("issueDate").value;
+            const validez = document.getElementById("validity").value;
+            const moneda = currencyElement.value;
+            const clienteNombre = document.getElementById("clientName").value || "-";
+            const clienteDireccion = document.getElementById("clientAddress").value || "-";
+            const clienteTelefono = document.getElementById("clientPhone").value || "-";
+            const clienteCorreo = document.getElementById("clientEmail").value || "-";
+            const clienteCiudad = document.getElementById("clientCity").value || "-";
+            const totales = calcularTotales();
+            const notas = document.getElementById("notes").textContent;
+
+            // Datos Tabla
+            const items = obtenerItems().map(item => [
+                item.code || "",
+                item.desc,
+                item.qty.toLocaleString("es-CO"),
+                formatCurrency(item.price),
+                formatCurrency(item.qty * item.price),
+            ]);
+
+            // --- FUNCIÓN DE DIBUJO DE ENCABEZADO Y PIE DE PÁGINA ---
+            const addHeaderAndFooter = (doc, data, totalPages) => {
+                const pageHeight = doc.internal.pageSize.height;
+                // Header (Lógica de logo y títulos)
+                doc.setFillColor(...colorSecondary);
+                doc.rect(0, 0, pageWidth, 4, 'F');
+                if (logoBase64) doc.addImage(logoBase64, 'JPEG', 14, 10, 25, 25);
+                doc.setFontSize(16);
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(...colorSecondary);
+                doc.text("INQUISERCO", 45, 17);
+                doc.setFontSize(9);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(50);
+                doc.text("Insumos Quimicos y Servicios de la Costa S.A.S", 45, 22);
+                doc.setFontSize(26);
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(0);
+                doc.text("COTIZACIÓN", pageWidth - 14, 20, { align: 'right' });
+
+                // Información de la cotización
+                doc.setFontSize(9);
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(50);
+                const infoBlockX = pageWidth - 45;
+                doc.text(`N°: ${nCotizacion}`, infoBlockX, 28, { align: 'right' });
+                doc.text(`Fecha: ${fecha}`, infoBlockX, 32, { align: 'right' });
+                doc.text(`Validez: ${validez}`, infoBlockX, 36, { align: 'right' });
+                doc.text(`Moneda: ${moneda}`, infoBlockX, 40, { align: 'right' });
+
+                doc.setDrawColor(200, 200, 200);
+                doc.line(14, 45, pageWidth - 14, 45); // Separador
+
+                // Dirección y datos de la empresa (simplificado para PDF)
+                doc.setFontSize(8);
+                doc.setFont("helvetica", "normal");
+                doc.text("NIT: 901875715-0 | Tel: 3137200908 | Correo: inquiserco@gmail.com | Ciudad: Barranquilla", 14, 48);
+
+                // Sección del Cliente
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "bold");
+                doc.text("CLIENTE", 14, 55);
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(9);
+                doc.text(`Nombre: ${clienteNombre}`, 14, 59);
+                doc.text(`Dirección: ${clienteDireccion}`, 14, 63);
+                doc.text(`Teléfono: ${clienteTelefono}`, 14, 67);
+                doc.text(`Correo: ${clienteCorreo}`, 14, 71);
+                doc.text(`Ciudad: ${clienteCiudad}`, 14, 75);
+
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "bold");
+                doc.text("DETALLE DE ARTÍCULOS", 14, 85);
+                
+                // Footer
+                // 🟢 CORRECCIÓN 5: Numeración y texto del pie de página
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text(`Página ${data.pageNumber} de ${totalPages}`, pageWidth - 14, pageHeight - 10, { align: 'right' });
+                doc.setFontSize(9);
+                doc.setTextColor(...colorSecondary);
+                doc.text("¡Gracias por tu preferencia!", 14, pageHeight - 10);
+            };
+
+            // --- TABLA DE ÍTEMS ---
+            doc.autoTable({
+                head: [['Ítem', 'Descripción', 'Cant.', 'P. Unitario', 'Total']],
+                body: items,
+                startY: 90,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 2, lineColor: [217, 229, 240], lineWidth: 0.1 },
+                headStyles: { fillColor: colorSecondary, textColor: 255, fontStyle: 'bold', halign: 'center' },
+                columnStyles: {
+                    0: { cellWidth: 15, halign: 'center' },
+                    1: { cellWidth: 'auto' },
+                    2: { cellWidth: 15, halign: 'center' },
+                    3: { cellWidth: 25, halign: 'right' },
+                    4: { cellWidth: 25, halign: 'right' }
+                },
+                margin: { top: 88, bottom: 20, left: 14, right: 14 },
+                didDrawPage: (data) => {
+                    // Esta función se llama antes de dibujar el contenido del pie de página
+                }
+            });
+
+            // --- TOTALES, NOTAS Y FIRMA (ÚLTIMA PÁGINA) ---
+            let totalPages = doc.internal.getNumberOfPages();
+            doc.setPage(totalPages);
+            let finalY = doc.lastAutoTable.finalY + 5;
+            const pageHeight = doc.internal.pageSize.height;
+            const totalBlockWidth = 50;
+            const totalBlockX = pageWidth - 14 - totalBlockWidth; 
+
+            // Verificar si Totales y Notas caben
+            if (finalY + 70 > pageHeight) {
+                doc.addPage();
+                totalPages++; // Incrementar total de páginas
+                finalY = 40; 
+                // Añadir encabezado a la nueva página
+                addHeaderAndFooter(doc, { pageNumber: totalPages }, totalPages);
+            }
+
+            // 🟢 CORRECCIÓN 2: Alineación a la derecha de totales
+            // TOTALES
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(50);
+            
+            doc.text(`Subtotal: ${formatCurrency(totales.subtotal, moneda)}`, pageWidth - 14, finalY, { align: 'right' });
+            finalY += 5;
+            doc.text(`IVA (19%): ${formatCurrency(totales.iva, moneda)}`, pageWidth - 14, finalY, { align: 'right' });
+            finalY += 5;
+            doc.setTextColor(180, 35, 24); // Color para descuento
+            doc.text(`Descuento (${formatDiscountLabel(totales.descuento, moneda)}): -${formatCurrency(totales.descuento.monto, moneda)}`, pageWidth - 14, finalY, { align: 'right' });
+            finalY += 6;
+            doc.setDrawColor(...colorSecondary);
+            doc.line(pageWidth - 65, finalY, pageWidth - 14, finalY); // Línea sobre el total
+            finalY += 4;
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(...colorSecondary);
+            doc.text(`TOTAL: ${formatCurrency(totales.total, moneda)}`, pageWidth - 14, finalY, { align: 'right' });
+            
+            // 🟢 CORRECCIÓN 3: Repetición y formato de las Notas
+            let notasY = finalY - 15 > doc.lastAutoTable.finalY + 5 ? doc.lastAutoTable.finalY + 5 : finalY + 5;
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(50);
+            doc.text("Notas y Observaciones:", 14, notasY);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            const splitNotas = doc.splitTextToSize(notas, pageWidth / 2 - 20); // Limita el ancho de las notas
+            doc.text(splitNotas, 14, notasY + 4);
+
+            // FIRMA
+            const firmaY = pageHeight - 40; 
+            doc.setDrawColor(150);
+            doc.line(14, firmaY, 80, firmaY);
+            doc.setFontSize(9);
+            doc.setTextColor(50);
+            doc.text("Aceptado por:", 14, firmaY + 5);
+            doc.setFont("helvetica", "bold");
+            doc.text(clienteNombre || "Cliente", 14, firmaY + 10);
+
+            totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                addHeaderAndFooter(doc, { pageNumber: i }, totalPages);
+            }
+
+            doc.save(`Cotizacion_${nCotizacion}_INQUISERCO.pdf`);
+        }
+
+        /* -------------------------------------------------------------
+           INICIALIZACIÓN 
+           ------------------------------------------------------------- */
+
+        function limpiarFormulario() {
+            document.getElementById("clientName").value = "";
+            document.getElementById("clientAddress").value = "";
+            document.getElementById("clientPhone").value = "";
+            document.getElementById("clientEmail").value = "";
+            document.getElementById("clientCity").value = "";
+            notesElement.textContent = DEFAULT_NOTES;
+            initFechas();
+            calcularSiguienteConsecutivo();
+            refrescarConsecutivoInicial();
+            selectCliente.value = "";
+            discountTypeEl.value = "percent";
+            discountValueEl.value = 0;
+            tableBody.innerHTML = "";
+            limpiarItem();
+            calcularTotales();
+            actualizarFirmaCliente();
+            cotizacionCargadaNumero = null;
+        }
+
+        function actualizarEstadoSupabase(mensaje, esError = false) {
+            supabaseInputs.status.textContent = mensaje;
+            supabaseInputs.status.style.background = esError ? "#ffe8e6" : "#e6f4ff";
+            supabaseInputs.status.style.color = esError ? "#b42318" : "#0f4f71";
+        }
+
+        function cargarConfigSupabaseEnUI() {
+            const config = SupaSync.loadConfig();
+            supabaseInputs.url.value = config.url;
+            supabaseInputs.key.value = config.key;
+            supabaseInputs.table.value = config.table;
+            supabaseInputs.record.value = config.record;
+            actualizarEstadoSupabase(config.url && config.key ? "Config cargada" : "Supabase sin configurar");
+        }
+
+        function obtenerConfigSupabase() {
+            return SupaSync.saveConfig({
+                url: supabaseInputs.url.value.trim(),
+                key: supabaseInputs.key.value.trim(),
+                table: supabaseInputs.table.value.trim() || SupaSync.defaults.table,
+                record: supabaseInputs.record.value.trim() || SupaSync.defaults.record,
+            });
+        }
+
+        async function probarSupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                await SupaSync.testConnection(config);
+                actualizarEstadoSupabase("Conexión exitosa con Supabase");
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "No se pudo conectar", true);
+                alert("Revisa la tabla y credenciales de Supabase.");
+            }
+        }
+
+        async function descargarDesdeSupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                const snapshot = await SupaSync.pullSnapshot(config);
+                if (!snapshot?.payload) {
+                    actualizarEstadoSupabase("No hay datos remotos con ese ID", true);
+                    return;
+                }
+                restaurarDesdeBackup(snapshot.payload, { silenciarAlertas: true });
+                actualizarEstadoSupabase(`Datos descargados (actualizado ${snapshot.updated_at ? new Date(snapshot.updated_at).toLocaleString() : "ahora"})`);
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "Fallo al descargar", true);
+                alert("No se pudieron recuperar los datos de Supabase.");
+            }
+        }
+
+        async function subirASupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                const saved = await SupaSync.pushSnapshot(construirSnapshot(), config);
+                actualizarEstadoSupabase(`Datos subidos (${saved?.updated_at ? new Date(saved.updated_at).toLocaleString() : "sin fecha"})`);
+                alert("Sincronizado en Supabase.");
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "Fallo al subir", true);
+                alert("No se pudieron enviar los datos a Supabase.");
+            }
+        }
+
+        async function sincronizarSupabaseAutomaticamente() {
+            const config = SupaSync.loadConfig();
+            if (!SupaSync.hasConfig(config)) return;
+            actualizarEstadoSupabase("Sincronizando automáticamente...");
+            const saved = await SupaSync.pushIfConfigured(construirSnapshot(), config);
+            if (saved) {
+                const fecha = saved.updated_at ? new Date(saved.updated_at).toLocaleString() : "ahora";
+                actualizarEstadoSupabase(`Sincronizado automáticamente (${fecha})`);
+            } else {
+                actualizarEstadoSupabase("No se pudo sincronizar automáticamente", true);
+            }
+        }
+
+        async function cargarDatosDesdeSupabase() {
+            const config = SupaSync.loadConfig();
+            if (!SupaSync.hasConfig(config)) return;
+            actualizarEstadoSupabase("Cargando respaldo en la nube...");
+            const snapshot = await SupaSync.pullIfConfigured(config);
+            if (snapshot?.payload) {
+                restaurarDesdeBackup(snapshot.payload, { silenciarAlertas: true });
+                intentarCargarPendiente();
+                actualizarEstadoSupabase(`Datos cargados (${snapshot.updated_at ? new Date(snapshot.updated_at).toLocaleString() : "ahora"})`);
+            } else {
+                await SupaSync.pushIfConfigured(construirSnapshot(), config);
+                actualizarEstadoSupabase("Datos locales subidos automáticamente");
+            }
+        }
+
+
+        function intentarCargarPendiente() {
+            const pendiente = localStorage.getItem(storage.cotizacionPendiente);
+            if (!pendiente) return false;
+
+            const index = data.cotizaciones.findIndex(c => String(c.numero) === String(pendiente));
+            if (index >= 0) {
+                cargarCotizacionPorIndice(index);
+                localStorage.removeItem(storage.cotizacionPendiente);
+                return true;
+            }
+
+            return false;
+        }
+
+        function inicializar() {
+            initFechas();
+            calcularSiguienteConsecutivo();
+            refrescarConsecutivoInicial();
+            renderSelectArticulos();
+            renderSelectClientes();
+            notesElement.textContent = DEFAULT_NOTES;
+            calcularTotales();
+            intentarCargarPendiente();
+            // Estas funciones se asumen que están en supabase-sync.js
+            if (typeof cargarConfigSupabaseEnUI === 'function') cargarConfigSupabaseEnUI();
+            if (typeof cargarDatosDesdeSupabase === 'function') cargarDatosDesdeSupabase();
+            
+            actualizarFirmaCliente(document.getElementById("clientName").value);
+        }
+
+        inicializar();
+    </script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artículos - Inquiserco</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="supabase-sync.js"></script>
+    <style>
+        :root { --primary: #0296c2; --secondary: #0066a1; --accent: #00b4e5; --text: #262626; --muted: #f2f7fb; --border: #d9e5f0; }
+        * { box-sizing: border-box; }
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background: #eef2f6; color: var(--text); margin: 0; padding: 24px; }
+        h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: 0.2px; }
+        .page { max-width: 960px; margin: 0 auto; background: white; padding: 32px; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.15); border-radius: 12px; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--secondary); padding-bottom: 18px; margin-bottom: 18px; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-mark { width: 64px; height: 64px; padding: 8px; border-radius: 50%; background: white; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08); object-fit: contain; display: block; }
+        .brand-name { display: flex; flex-direction: column; gap: 4px; }
+        .brand-name small { text-transform: uppercase; font-size: 12px; color: #4a5568; letter-spacing: 1px; }
+        nav { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        nav a { text-decoration: none; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); color: var(--secondary); font-weight: 700; background: #f8fbff; }
+        nav a.active { background: linear-gradient(135deg, var(--secondary), var(--accent)); color: white; border-color: transparent; }
+        .section-title { background: var(--secondary); color: white; padding: 10px 14px; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; border-radius: 8px 8px 0 0; }
+        .info-card { border: 1px solid var(--border); border-top: 0; border-radius: 0 0 8px 8px; padding: 14px 16px 10px; margin-bottom: 18px; }
+        .mini-form label { font-size: 12px; font-weight: 700; color: #4a5568; display: block; margin-bottom: 4px; }
+        .mini-form input { width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border); font-size: 14px; margin-bottom: 8px; }
+        .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .btn { padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; letter-spacing: 0.3px; transition: transform 0.1s ease, box-shadow 0.15s ease; }
+        .btn.primary { background: linear-gradient(135deg, var(--secondary), var(--accent)); color: white; box-shadow: 0 12px 24px rgba(0, 150, 199, 0.25); }
+        .btn.secondary { background: white; color: var(--secondary); border: 1px solid var(--border); }
+        .btn:hover { transform: translateY(-1px); }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { border: 1px solid var(--border); padding: 10px 12px; font-size: 14px; vertical-align: top; }
+        th { background: #f0f7fb; color: #2b4c63; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 800; }
+        .badge { padding: 3px 8px; background: var(--muted); border-radius: 999px; border: 1px solid var(--border); font-size: 11px; color: #2b4c63; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+        .backup-card { border: 1px dashed var(--border); padding: 12px 14px; border-radius: 10px; background: #f8fbff; margin: 12px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .supabase-panel { display: none; }
+        .backup-card p { margin: 0; color: #2b4c63; font-weight: 600; }
+        .supabase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 12px; width: 100%; }
+        .supabase-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: #4a5568; }
+        .supabase-grid input { padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border); font-size: 13px; }
+        .supabase-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+        @media (max-width: 900px) { body { padding: 12px; } .page { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="top-bar">
+            <div class="brand">
+                <img src="Imagen1.jpg" alt="Logo de INQUISERCO" class="brand-mark" />
+                <div class="brand-name">
+                    <h3>INQUISERCO</h3>
+                    <small>Insumos Quimicos y Servicios de la Costa S.A.S</small>
+                </div>
+            </div>
+            <h2 style="color: var(--secondary);">Artículos</h2>
+        </div>
+
+        <nav>
+            <a href="index.html">Cotización</a>
+            <a href="cotizaciones.html">Cotizaciones</a>
+            <a class="active" href="articulos.html">Artículos</a>
+            <a href="clientes.html">Clientes</a>
+        </nav>
+
+        <div class="backup-card supabase-panel" style="flex-direction: column; align-items: flex-start;">
+            <p>Sincroniza con Supabase para respaldar artículos en la nube.</p>
+            <p class="badge" style="background:#e6f4ff;color:#0f4f71;">Supabase configurado automáticamente para INQUISERCO.</p>
+            <div class="sr-only" aria-hidden="true">
+                <input id="supabaseUrl" type="hidden" value="https://uxfehqfkcthsmvpegzfn.supabase.co" />
+                <input id="supabaseKey" type="hidden" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4ZmVocWZrY3Roc212cGVnemZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3MDYzMTksImV4cCI6MjA4MDI4MjMxOX0.jEC9vCZy7_XElSnQWMx2D2C0R_l1JCvwhwvjkDGcrEs" />
+                <input id="supabaseTable" type="hidden" value="inquiserco_respaldo" />
+                <input id="supabaseRecord" type="hidden" value="principal" />
+            </div>
+            <div class="supabase-actions">
+                <button class="btn secondary" onclick="probarSupabase()">Probar conexión</button>
+                <button class="btn secondary" onclick="descargarDesdeSupabase()">Descargar desde Supabase</button>
+                <button class="btn primary" onclick="subirASupabase()">Subir a Supabase</button>
+                <span class="badge" id="supabaseStatus">Supabase sin configurar</span>
+            </div>
+        </div>
+
+        <div class="section-title">Gestión de artículos</div>
+        <div class="info-card">
+            <div class="mini-form">
+                <label>Código</label>
+                <input id="articuloCodigo" type="text" placeholder="Código interno" />
+                <label>Descripción</label>
+                <input id="articuloNombre" type="text" placeholder="Nombre o descripción" />
+                <label>Precio de compra</label>
+                <input id="articuloCompra" type="number" min="0" step="0.01" placeholder="0" />
+                <label>Precio de venta</label>
+                <input id="articuloVenta" type="number" min="0" step="0.01" placeholder="0" />
+                <div class="actions">
+                    <button class="btn secondary" onclick="limpiarArticulo()">Limpiar</button>
+                    <button class="btn primary" onclick="guardarArticulo()">Guardar artículo</button>
+                </div>
+            </div>
+            <div style="margin-top:12px; display:flex; justify-content: space-between; align-items:center;">
+                <strong>Lista de artículos</strong>
+                <span class="badge" id="articulosCount">0 registrados</span>
+            </div>
+            <div class="actions" style="margin-top:8px;">
+                <input id="archivoImportar" type="file" accept=".xlsx,.xls" style="display:none" onchange="procesarImportacion(event)">
+                <button class="btn secondary" onclick="document.getElementById('archivoImportar').click()">Importar Excel</button>
+                <button class="btn primary" onclick="exportarArticulos()">Exportar Excel</button>
+            </div>
+            <table id="tablaArticulos">
+                <thead>
+                    <tr><th>Código</th><th>Descripción</th><th>Compra</th><th>Venta</th><th>Acciones</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const storage = {
+            articulos: "inquiserco_articulos",
+            clientes: "inquiserco_clientes",
+            cotizaciones: "inquiserco_cotizaciones",
+            consecutivo: "inquiserco_consecutivo",
+        };
+        const data = { articulos: JSON.parse(localStorage.getItem(storage.articulos) || "[]") };
+        const supabaseInputs = {
+            url: document.getElementById("supabaseUrl"),
+            key: document.getElementById("supabaseKey"),
+            table: document.getElementById("supabaseTable"),
+            record: document.getElementById("supabaseRecord"),
+            status: document.getElementById("supabaseStatus"),
+        };
+        let articuloEditando = null;
+
+        const formatCurrency = value => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(value);
+
+        const persistir = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+
+        const construirSnapshot = () => ({
+            version: 1,
+            generado: new Date().toISOString(),
+            articulos: JSON.parse(localStorage.getItem(storage.articulos) || "[]"),
+            clientes: JSON.parse(localStorage.getItem(storage.clientes) || "[]"),
+            cotizaciones: JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]"),
+            consecutivo: parseInt(localStorage.getItem(storage.consecutivo) || "113", 10),
+        });
+
+        function restaurarDesdeBackup(contenido, { silenciarAlertas = false } = {}) {
+            if (!Array.isArray(contenido.articulos) || !Array.isArray(contenido.clientes) || !Array.isArray(contenido.cotizaciones)) {
+                alert("El archivo no tiene el formato esperado.");
+                return;
+            }
+            data.articulos = contenido.articulos;
+            persistir(storage.articulos, data.articulos);
+            if (contenido.clientes) persistir(storage.clientes, contenido.clientes);
+            if (contenido.cotizaciones) persistir(storage.cotizaciones, contenido.cotizaciones);
+            if (Number.isFinite(contenido.consecutivo)) {
+                localStorage.setItem(storage.consecutivo, contenido.consecutivo);
+            }
+            renderArticulos();
+            if (!silenciarAlertas) {
+                alert("Datos importados correctamente.");
+            }
+        }
+
+        function actualizarEstadoSupabase(mensaje, esError = false) {
+            supabaseInputs.status.textContent = mensaje;
+            supabaseInputs.status.style.background = esError ? "#ffe8e6" : "#e6f4ff";
+            supabaseInputs.status.style.color = esError ? "#b42318" : "#0f4f71";
+        }
+
+        function cargarConfigSupabaseEnUI() {
+            const config = SupaSync.loadConfig();
+            supabaseInputs.url.value = config.url;
+            supabaseInputs.key.value = config.key;
+            supabaseInputs.table.value = config.table;
+            supabaseInputs.record.value = config.record;
+            actualizarEstadoSupabase(config.url && config.key ? "Config cargada" : "Supabase sin configurar");
+        }
+
+        function obtenerConfigSupabase() {
+            return SupaSync.saveConfig({
+                url: supabaseInputs.url.value.trim(),
+                key: supabaseInputs.key.value.trim(),
+                table: supabaseInputs.table.value.trim() || SupaSync.defaults.table,
+                record: supabaseInputs.record.value.trim() || SupaSync.defaults.record,
+            });
+        }
+
+        async function probarSupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                await SupaSync.testConnection(config);
+                actualizarEstadoSupabase("Conexión exitosa con Supabase");
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "No se pudo conectar", true);
+                alert("Revisa la tabla y credenciales de Supabase.");
+            }
+        }
+
+        async function descargarDesdeSupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                const snapshot = await SupaSync.pullSnapshot(config);
+                if (!snapshot?.payload) {
+                    actualizarEstadoSupabase("No hay datos remotos con ese ID", true);
+                    return;
+                }
+                restaurarDesdeBackup(snapshot.payload);
+                actualizarEstadoSupabase(`Datos descargados (actualizado ${snapshot.updated_at ? new Date(snapshot.updated_at).toLocaleString() : "ahora"})`);
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "Fallo al descargar", true);
+                alert("No se pudieron recuperar los datos de Supabase.");
+            }
+        }
+
+        async function subirASupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                const saved = await SupaSync.pushSnapshot(construirSnapshot(), config);
+                actualizarEstadoSupabase(`Datos subidos (${saved?.updated_at ? new Date(saved.updated_at).toLocaleString() : "sin fecha"})`);
+                alert("Sincronizado en Supabase.");
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "Fallo al subir", true);
+                alert("No se pudieron enviar los datos a Supabase.");
+            }
+        }
+
+        async function sincronizarSupabaseAutomaticamente() {
+            const config = SupaSync.loadConfig();
+            if (!SupaSync.hasConfig(config)) return;
+            actualizarEstadoSupabase("Sincronizando automáticamente...");
+            const saved = await SupaSync.pushIfConfigured(construirSnapshot(), config);
+            if (saved) {
+                const fecha = saved.updated_at ? new Date(saved.updated_at).toLocaleString() : "ahora";
+                actualizarEstadoSupabase(`Sincronizado automáticamente (${fecha})`);
+            } else {
+                actualizarEstadoSupabase("No se pudo sincronizar automáticamente", true);
+            }
+        }
+
+        async function cargarDatosDesdeSupabase() {
+            const config = SupaSync.loadConfig();
+            if (!SupaSync.hasConfig(config)) return;
+            actualizarEstadoSupabase("Cargando respaldo en la nube...");
+            const snapshot = await SupaSync.pullIfConfigured(config);
+            if (snapshot?.payload) {
+                restaurarDesdeBackup(snapshot.payload, { silenciarAlertas: true });
+                actualizarEstadoSupabase(`Datos cargados (${snapshot.updated_at ? new Date(snapshot.updated_at).toLocaleString() : "ahora"})`);
+            } else {
+                await SupaSync.pushIfConfigured(construirSnapshot(), config);
+                actualizarEstadoSupabase("Datos locales subidos automáticamente");
+            }
+        }
+
+        function renderArticulos() {
+            const tbody = document.querySelector("#tablaArticulos tbody");
+            tbody.innerHTML = "";
+            data.articulos.forEach((articulo, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${articulo.codigo || "-"}</td>
+                    <td>${articulo.nombre}</td>
+                    <td style=\"text-align:right;\">${formatCurrency(articulo.compra)}</td>
+                    <td style=\"text-align:right;\">${formatCurrency(articulo.venta)}</td>
+                    <td style=\"text-align:center;\">
+                        <button class=\"btn secondary\" style=\"padding:6px 10px;font-size:12px;\" onclick=\"editarArticulo(${index})\">Editar</button>
+                        <button class=\"btn secondary\" style=\"padding:6px 10px;font-size:12px;\" onclick=\"eliminarArticulo(${index})\">Borrar</button>
+                    </td>`;
+                tbody.appendChild(row);
+            });
+            document.getElementById("articulosCount").textContent = `${data.articulos.length} registrados`;
+        }
+
+        function guardarArticulo() {
+            const codigo = document.getElementById("articuloCodigo").value.trim();
+            const nombre = document.getElementById("articuloNombre").value.trim();
+            const compra = parseFloat(document.getElementById("articuloCompra").value);
+            const venta = parseFloat(document.getElementById("articuloVenta").value);
+            if (!codigo) {
+                alert("Ingresa un código para el artículo.");
+                return;
+            }
+            const codigoDuplicado = data.articulos.findIndex((art, idx) => (art.codigo || "").trim().toLowerCase() === codigo.toLowerCase() && idx !== articuloEditando);
+            if (codigoDuplicado >= 0) {
+                alert("El código ya está en uso. Debe ser único.");
+                return;
+            }
+            if (!nombre || Number.isNaN(compra) || Number.isNaN(venta)) {
+                alert("Completa los datos del artículo.");
+                return;
+            }
+            const nuevo = { codigo, nombre, compra, venta };
+            if (articuloEditando !== null) {
+                data.articulos[articuloEditando] = nuevo;
+            } else {
+                data.articulos.push(nuevo);
+            }
+            persistir(storage.articulos, data.articulos);
+            renderArticulos();
+            limpiarArticulo();
+            sincronizarSupabaseAutomaticamente();
+        }
+
+        function limpiarArticulo() {
+            articuloEditando = null;
+            document.getElementById("articuloCodigo").value = "";
+            document.getElementById("articuloNombre").value = "";
+            document.getElementById("articuloCompra").value = "";
+            document.getElementById("articuloVenta").value = "";
+        }
+
+        function editarArticulo(index) {
+            articuloEditando = index;
+            const articulo = data.articulos[index];
+            document.getElementById("articuloCodigo").value = articulo.codigo;
+            document.getElementById("articuloNombre").value = articulo.nombre;
+            document.getElementById("articuloCompra").value = articulo.compra;
+            document.getElementById("articuloVenta").value = articulo.venta;
+        }
+
+        function eliminarArticulo(index) {
+            if (!confirm("¿Eliminar este artículo?")) return;
+            data.articulos.splice(index, 1);
+            persistir(storage.articulos, data.articulos);
+            renderArticulos();
+            sincronizarSupabaseAutomaticamente();
+        }
+
+        function exportarArticulos() {
+            if (!data.articulos.length) {
+                alert("No hay artículos para exportar.");
+                return;
+            }
+            const filas = data.articulos.map(art => ({
+                Codigo: art.codigo || "",
+                Descripcion: art.nombre || "",
+                "Precio compra": art.compra,
+                "Precio venta": art.venta,
+            }));
+            const hoja = XLSX.utils.json_to_sheet(filas, { header: ["Codigo", "Descripcion", "Precio compra", "Precio venta"] });
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Articulos");
+            XLSX.writeFile(libro, "articulos_inquiserco.xlsx");
+        }
+
+        function procesarImportacion(evento) {
+            const archivo = evento.target.files?.[0];
+            if (!archivo) return;
+            const lector = new FileReader();
+            lector.onload = e => {
+                try {
+                    const dataBinaria = new Uint8Array(e.target.result);
+                    const libro = XLSX.read(dataBinaria, { type: "array" });
+                    const hoja = libro.Sheets[libro.SheetNames[0]];
+                    const registros = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+                    if (!Array.isArray(registros) || !registros.length) {
+                        alert("El archivo no tiene datos para importar.");
+                        return;
+                    }
+                    const normalizados = registros.map(reg => ({
+                        codigo: String(reg.Codigo || reg.codigo || "").trim(),
+                        nombre: String(reg.Descripcion || reg.descripcion || "").trim(),
+                        compra: Number(reg["Precio compra"] ?? reg.compra ?? 0),
+                        venta: Number(reg["Precio venta"] ?? reg.venta ?? 0),
+                    })).filter(item => item.codigo);
+                    if (!normalizados.length) {
+                        alert("El archivo no contiene códigos válidos.");
+                        return;
+                    }
+                    const mapaCodigos = new Map();
+                    data.articulos.forEach(art => mapaCodigos.set((art.codigo || "").trim().toLowerCase(), art));
+                    normalizados.forEach(item => {
+                        const clave = item.codigo.toLowerCase();
+                        if (mapaCodigos.has(clave)) {
+                            const existente = mapaCodigos.get(clave);
+                            existente.nombre = item.nombre || existente.nombre;
+                            existente.compra = Number.isFinite(item.compra) ? item.compra : existente.compra;
+                            existente.venta = Number.isFinite(item.venta) ? item.venta : existente.venta;
+                        } else {
+                            data.articulos.push({
+                                codigo: item.codigo,
+                                nombre: item.nombre || "(Sin descripción)",
+                                compra: Number.isFinite(item.compra) ? item.compra : 0,
+                                venta: Number.isFinite(item.venta) ? item.venta : 0,
+                            });
+                        }
+                    });
+                    persistir(storage.articulos, data.articulos);
+                    renderArticulos();
+                    sincronizarSupabaseAutomaticamente();
+                    alert("Importación completada. Se actualizaron/añadieron los artículos.");
+                } catch (error) {
+                    console.error(error);
+                    alert("No se pudo importar el archivo. Verifica que sea un Excel válido.");
+                } finally {
+                    evento.target.value = "";
+                }
+            };
+            lector.readAsArrayBuffer(archivo);
+        }
+
+        cargarConfigSupabaseEnUI();
+        renderArticulos();
+        cargarDatosDesdeSupabase();
+    </script>
+</body>
+</html>

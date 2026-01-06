@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizaciones - InquisERCO</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-sync.js"></script>
+    <style>
+        :root { --primary: #0296c2; --secondary: #0066a1; --accent: #00b4e5; --text: #262626; --muted: #f2f7fb; --border: #d9e5f0; }
+        * { box-sizing: border-box; }
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background: #eef2f6; color: var(--text); margin: 0; padding: 24px; }
+        h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: 0.2px; }
+        .page { max-width: 1024px; margin: 0 auto; background: white; padding: 32px; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.15); border-radius: 12px; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--secondary); padding-bottom: 18px; margin-bottom: 18px; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-mark { width: 64px; height: 64px; padding: 8px; border-radius: 50%; background: white; border: 1px solid var(--border); box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08); object-fit: contain; display: block; }
+        .brand-name { display: flex; flex-direction: column; gap: 4px; }
+        .brand-name small { text-transform: uppercase; font-size: 12px; color: #4a5568; letter-spacing: 1px; }
+        nav { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        nav a { text-decoration: none; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); color: var(--secondary); font-weight: 700; background: #f8fbff; }
+        nav a.active { background: linear-gradient(135deg, var(--secondary), var(--accent)); color: white; border-color: transparent; }
+        .section-title { background: var(--secondary); color: white; padding: 10px 14px; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; border-radius: 8px 8px 0 0; }
+        .info-card { border: 1px solid var(--border); border-top: 0; border-radius: 0 0 8px 8px; padding: 14px 16px 10px; margin-bottom: 18px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { border: 1px solid var(--border); padding: 10px 12px; font-size: 14px; vertical-align: top; }
+        th { background: #f0f7fb; color: #2b4c63; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 800; }
+        .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .btn { padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; letter-spacing: 0.3px; transition: transform 0.1s ease, box-shadow 0.15s ease; }
+        .btn.primary { background: linear-gradient(135deg, var(--secondary), var(--accent)); color: white; box-shadow: 0 12px 24px rgba(0, 150, 199, 0.25); }
+        .btn.secondary { background: white; color: var(--secondary); border: 1px solid var(--border); }
+        .btn:hover { transform: translateY(-1px); }
+        .badge { padding: 3px 8px; background: var(--muted); border-radius: 999px; border: 1px solid var(--border); font-size: 11px; color: #2b4c63; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+        .table-actions { display: flex; gap: 8px; justify-content: center; }
+        .backup-card { border: 1px dashed var(--border); padding: 12px 14px; border-radius: 10px; background: #f8fbff; margin: 12px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .backup-card p { margin: 0; color: #2b4c63; font-weight: 600; }
+        .supabase-panel { display: none; }
+        .supabase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 12px; width: 100%; }
+        .supabase-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: #4a5568; }
+        .supabase-grid input { padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border); font-size: 13px; }
+        .supabase-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+        @media (max-width: 900px) { body { padding: 12px; } .page { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="top-bar">
+            <div class="brand">
+                <img src="Imagen1.jpg" alt="Logo de INQUISERCO" class="brand-mark" />
+                <div class="brand-name">
+                    <h3>INQUISERCO</h3>
+                    <small>Insumos Quimicos y Servicios de la Costa S.A.S</small>
+                </div>
+            </div>
+            <h2 style="color: var(--secondary);">Cotizaciones</h2>
+        </div>
+
+        <nav>
+            <a href="index.html">Cotización</a>
+            <a class="active" href="cotizaciones.html">Cotizaciones</a>
+            <a href="articulos.html">Artículos</a>
+            <a href="clientes.html">Clientes</a>
+        </nav>
+
+        <div class="backup-card supabase-panel" style="flex-direction: column; align-items: flex-start;">
+            <p>Sincroniza con Supabase para guardar en la nube.</p>
+            <p class="badge" style="background:#e6f4ff;color:#0f4f71;">Supabase configurado automáticamente para INQUISERCO.</p>
+            <div class="sr-only" aria-hidden="true">
+                <input id="supabaseUrl" type="hidden" value="https://uxfehqfkcthsmvpegzfn.supabase.co" />
+                <input id="supabaseKey" type="hidden" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4ZmVocWZrY3Roc212cGVnemZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3MDYzMTksImV4cCI6MjA4MDI4MjMxOX0.jEC9vCZy7_XElSnQWMx2D2C0R_l1JCvwhwvjkDGcrEs" />
+                <input id="supabaseTable" type="hidden" value="inquiserco_respaldo" />
+                <input id="supabaseRecord" type="hidden" value="principal" />
+            </div>
+            <div class="supabase-actions">
+                <button class="btn secondary" onclick="probarSupabase()">Probar conexión</button>
+                <button class="btn secondary" onclick="descargarDesdeSupabase()">Descargar desde Supabase</button>
+                <button class="btn primary" onclick="subirASupabase()">Subir a Supabase</button>
+                <span class="badge" id="supabaseStatus">Supabase sin configurar</span>
+            </div>
+        </div>
+
+        <div class="section-title">Cotizaciones guardadas</div>
+        <div class="info-card">
+            <div class="actions" style="align-items: center;">
+                <input id="buscarCotizacion" type="number" min="1" placeholder="N° a buscar" style="width:160px;" />
+                <button class="btn secondary" onclick="buscarCotizacion()">Buscar y cargar</button>
+                <span class="badge" id="cotizacionesCount">0 almacenadas</span>
+            </div>
+            <table id="tablaCotizaciones">
+                <thead>
+                    <tr><th>N°</th><th>Cliente</th><th>Fecha</th><th>Moneda</th><th>Total</th><th>Acciones</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const storage = {
+            cotizaciones: "inquiserco_cotizaciones",
+            cotizacionPendiente: "inquiserco_cotizacion_pendiente",
+            articulos: "inquiserco_articulos",
+            clientes: "inquiserco_clientes",
+            consecutivo: "inquiserco_consecutivo",
+        };
+        const data = {
+            cotizaciones: JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]"),
+        };
+
+        const supabaseInputs = {
+            url: document.getElementById("supabaseUrl"),
+            key: document.getElementById("supabaseKey"),
+            table: document.getElementById("supabaseTable"),
+            record: document.getElementById("supabaseRecord"),
+            status: document.getElementById("supabaseStatus"),
+        };
+
+        const formatCurrency = (value, currency = "COP") => new Intl.NumberFormat("es-CO", {
+            style: "currency",
+            currency,
+            minimumFractionDigits: 0,
+        }).format(value);
+
+        function calcularSiguienteConsecutivo() {
+            const consecutivoMayorEnCotizaciones = data.cotizaciones.reduce((max, cot) => {
+                const numero = parseInt(cot.numero, 10);
+                return Number.isFinite(numero) ? Math.max(max, numero) : max;
+            }, 0);
+            const siguienteDisponible = Math.max(1, consecutivoMayorEnCotizaciones + 1);
+            localStorage.setItem(storage.consecutivo, siguienteDisponible);
+            return siguienteDisponible;
+        }
+
+        const construirSnapshot = () => ({
+            version: 1,
+            generado: new Date().toISOString(),
+            articulos: JSON.parse(localStorage.getItem(storage.articulos) || "[]"),
+            clientes: JSON.parse(localStorage.getItem(storage.clientes) || "[]"),
+            cotizaciones: data.cotizaciones,
+            consecutivo: calcularSiguienteConsecutivo(),
+        });
+    
+        function exportarDatos() {
+            const snapshot = construirSnapshot();
+            const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `inquiserco-respaldo-${new Date().toISOString().slice(0, 10)}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function restaurarDesdeBackup(contenido, { silenciarAlertas = false } = {}) {
+            if (!Array.isArray(contenido.articulos) || !Array.isArray(contenido.clientes) || !Array.isArray(contenido.cotizaciones)) {
+                alert("El archivo no tiene el formato esperado.");
+                return;
+            }
+            data.cotizaciones = contenido.cotizaciones;
+            localStorage.setItem(storage.cotizaciones, JSON.stringify(data.cotizaciones));
+            if (contenido.articulos) localStorage.setItem(storage.articulos, JSON.stringify(contenido.articulos));
+            if (contenido.clientes) localStorage.setItem(storage.clientes, JSON.stringify(contenido.clientes));
+            if (Number.isFinite(contenido.consecutivo)) {
+                const consecutivoRestaurado = Math.max(1, contenido.consecutivo);
+                localStorage.setItem(storage.consecutivo, consecutivoRestaurado);
+            }
+            calcularSiguienteConsecutivo();
+            renderCotizaciones();
+            if (!silenciarAlertas) {
+                alert("Datos importados correctamente.");
+            }
+        }
+
+        const importBackupInput = document.getElementById("importBackup");
+        if (importBackupInput) {
+            importBackupInput.addEventListener("change", event => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    try {
+                        const contenido = JSON.parse(e.target.result);
+                        restaurarDesdeBackup(contenido);
+                    } catch (error) {
+                        alert("No se pudo leer el archivo de respaldo.");
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = "";
+            });
+        }
+
+        function actualizarEstadoSupabase(mensaje, esError = false) {
+            supabaseInputs.status.textContent = mensaje;
+            supabaseInputs.status.style.background = esError ? "#ffe8e6" : "#e6f4ff";
+            supabaseInputs.status.style.color = esError ? "#b42318" : "#0f4f71";
+        }
+
+        function cargarConfigSupabaseEnUI() {
+            const config = SupaSync.loadConfig();
+            supabaseInputs.url.value = config.url;
+            supabaseInputs.key.value = config.key;
+            supabaseInputs.table.value = config.table;
+            supabaseInputs.record.value = config.record;
+            actualizarEstadoSupabase(config.url && config.key ? "Config cargada" : "Supabase sin configurar");
+        }
+
+        function obtenerConfigSupabase() {
+            return SupaSync.saveConfig({
+                url: supabaseInputs.url.value.trim(),
+                key: supabaseInputs.key.value.trim(),
+                table: supabaseInputs.table.value.trim() || SupaSync.defaults.table,
+                record: supabaseInputs.record.value.trim() || SupaSync.defaults.record,
+            });
+        }
+
+        async function probarSupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                await SupaSync.testConnection(config);
+                actualizarEstadoSupabase("Conexión exitosa con Supabase");
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "No se pudo conectar", true);
+                alert("Revisa la tabla y credenciales de Supabase.");
+            }
+        }
+
+        async function descargarDesdeSupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                const snapshot = await SupaSync.pullSnapshot(config);
+                if (!snapshot?.payload) {
+                    actualizarEstadoSupabase("No hay datos remotos con ese ID", true);
+                    return;
+                }
+                restaurarDesdeBackup(snapshot.payload);
+                actualizarEstadoSupabase(`Datos descargados (actualizado ${snapshot.updated_at ? new Date(snapshot.updated_at).toLocaleString() : "ahora"})`);
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "Fallo al descargar", true);
+                alert("No se pudieron recuperar los datos de Supabase.");
+            }
+        }
+
+        async function subirASupabase() {
+            try {
+                const config = obtenerConfigSupabase();
+                const saved = await SupaSync.pushSnapshot(construirSnapshot(), config);
+                actualizarEstadoSupabase(`Datos subidos (${saved?.updated_at ? new Date(saved.updated_at).toLocaleString() : "sin fecha"})`);
+                alert("Sincronizado en Supabase.");
+            } catch (error) {
+                console.error(error);
+                actualizarEstadoSupabase(error.message || "Fallo al subir", true);
+                alert("No se pudieron enviar los datos a Supabase.");
+            }
+        }
+
+        async function sincronizarSupabaseAutomaticamente() {
+            const config = SupaSync.loadConfig();
+            if (!SupaSync.hasConfig(config)) return;
+            actualizarEstadoSupabase("Sincronizando automáticamente...");
+            const saved = await SupaSync.pushIfConfigured(construirSnapshot(), config);
+            if (saved) {
+                const fecha = saved.updated_at ? new Date(saved.updated_at).toLocaleString() : "ahora";
+                actualizarEstadoSupabase(`Sincronizado automáticamente (${fecha})`);
+            } else {
+                actualizarEstadoSupabase("No se pudo sincronizar automáticamente", true);
+            }
+        }
+
+        async function cargarDatosDesdeSupabase() {
+            const config = SupaSync.loadConfig();
+            if (!SupaSync.hasConfig(config)) return;
+            actualizarEstadoSupabase("Cargando respaldo en la nube...");
+            const snapshot = await SupaSync.pullIfConfigured(config);
+            if (snapshot?.payload) {
+                restaurarDesdeBackup(snapshot.payload, { silenciarAlertas: true });
+                actualizarEstadoSupabase(`Datos cargados (${snapshot.updated_at ? new Date(snapshot.updated_at).toLocaleString() : "ahora"})`);
+            } else {
+                await SupaSync.pushIfConfigured(construirSnapshot(), config);
+                actualizarEstadoSupabase("Datos locales subidos automáticamente");
+            }
+        }
+
+        function cargarCotizacion(numero) {
+            localStorage.setItem(storage.cotizacionPendiente, numero);
+            window.location.href = "index.html";
+        }
+
+        function borrarCotizacion(index) {
+            if (!confirm("¿Eliminar esta cotización guardada?")) return;
+            data.cotizaciones.splice(index, 1);
+            localStorage.setItem(storage.cotizaciones, JSON.stringify(data.cotizaciones));
+            calcularSiguienteConsecutivo();
+            renderCotizaciones();
+            sincronizarSupabaseAutomaticamente();
+        }
+
+        function buscarCotizacion() {
+            const numero = document.getElementById("buscarCotizacion").value;
+            const index = data.cotizaciones.findIndex(c => String(c.numero) === String(numero));
+            if (index === -1) {
+                alert("No se encontró la cotización solicitada.");
+                return;
+            }
+            cargarCotizacion(data.cotizaciones[index].numero);
+        }
+
+        function renderCotizaciones() {
+            const tbody = document.querySelector("#tablaCotizaciones tbody");
+            tbody.innerHTML = "";
+            data.cotizaciones.forEach((cotizacion, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${cotizacion.numero}</td>
+                    <td>${cotizacion.cliente?.empresa || "-"}</td>
+                    <td>${cotizacion.fecha}</td>
+                    <td>${cotizacion.moneda}</td>
+                    <td style="text-align:right;">${formatCurrency(cotizacion.totales?.total || 0, cotizacion.moneda)}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn primary" style="padding:6px 10px;font-size:12px;" onclick="cargarCotizacion(${cotizacion.numero})">Cargar</button>
+                            <button class="btn secondary" style="padding:6px 10px;font-size:12px;" onclick="borrarCotizacion(${index})">Borrar</button>
+                        </div>
+                    </td>`;
+                tbody.appendChild(row);
+            });
+            document.getElementById("cotizacionesCount").textContent = `${data.cotizaciones.length} almacenadas`;
+        }
+
+        cargarConfigSupabaseEnUI();
+        calcularSiguienteConsecutivo();
+        renderCotizaciones();
+        cargarDatosDesdeSupabase();
+    </script>
+</body>
+</html>
