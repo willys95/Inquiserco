@@ -61,6 +61,7 @@
         <nav>
             <a href="index.html">Cotización</a>
             <a href="cotizaciones.html">Cotizaciones</a>
+            <a href="remisiones.html">Remisiones</a>
             <a class="active" href="articulos.html">Artículos</a>
             <a href="clientes.html">Clientes</a>
         </nav>
@@ -122,6 +123,8 @@
             clientes: "inquiserco_clientes",
             cotizaciones: "inquiserco_cotizaciones",
             consecutivo: "inquiserco_consecutivo",
+            remisiones: "inquiserco_remisiones",
+            remisionConsecutivo: "inquiserco_remision_consecutivo",
         };
         const data = { articulos: JSON.parse(localStorage.getItem(storage.articulos) || "[]") };
         const supabaseInputs = {
@@ -144,6 +147,8 @@
             clientes: JSON.parse(localStorage.getItem(storage.clientes) || "[]"),
             cotizaciones: JSON.parse(localStorage.getItem(storage.cotizaciones) || "[]"),
             consecutivo: parseInt(localStorage.getItem(storage.consecutivo) || "113", 10),
+            remisiones: JSON.parse(localStorage.getItem(storage.remisiones) || "[]"),
+            remisionConsecutivo: parseInt(localStorage.getItem(storage.remisionConsecutivo) || "1", 10),
         });
 
         function restaurarDesdeBackup(contenido, { silenciarAlertas = false } = {}) {
@@ -155,8 +160,12 @@
             persistir(storage.articulos, data.articulos);
             if (contenido.clientes) persistir(storage.clientes, contenido.clientes);
             if (contenido.cotizaciones) persistir(storage.cotizaciones, contenido.cotizaciones);
+            if (Array.isArray(contenido.remisiones)) persistir(storage.remisiones, contenido.remisiones);
             if (Number.isFinite(contenido.consecutivo)) {
                 localStorage.setItem(storage.consecutivo, contenido.consecutivo);
+            }
+            if (Number.isFinite(contenido.remisionConsecutivo)) {
+                localStorage.setItem(storage.remisionConsecutivo, contenido.remisionConsecutivo);
             }
             renderArticulos();
             if (!silenciarAlertas) {
