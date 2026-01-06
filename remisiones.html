@@ -44,19 +44,36 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 2px solid #111;
-            padding-bottom: 10px;
-            margin-bottom: 12px;
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
             gap: 12px;
         }
 
-        .header-left {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+        .brand-mark {
+            width: 56px;
+            height: 56px;
+            padding: 6px;
+            border-radius: 50%;
+            background: white;
+            border: 1px solid var(--border);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+            object-fit: contain;
         }
 
-        .header-left strong {
+        .brand-name {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .brand-name strong {
             font-size: 16px;
             text-transform: uppercase;
         }
@@ -64,18 +81,14 @@
         .header-left span {
             font-size: 12px;
             letter-spacing: 0.3px;
+            color: #4a5568;
         }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .header-logo {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
+        .remision-title {
+            font-size: 22px;
+            color: var(--secondary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
         nav {
@@ -102,26 +115,29 @@
         }
 
         .section-title {
-            background: #111;
+            background: var(--secondary);
             color: white;
-            padding: 6px 10px;
+            padding: 8px 12px;
             text-transform: uppercase;
             font-size: 12px;
             letter-spacing: 0.5px;
+            border-radius: 8px 8px 0 0;
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: 1.4fr 1fr;
             gap: 0;
-            border: 1px solid #111;
+            border: 1px solid var(--border);
             border-top: 0;
             margin-bottom: 8px;
+            border-radius: 0 0 8px 8px;
+            background: #f9fcff;
         }
 
         .info-block {
             padding: 6px 10px;
-            border-right: 1px solid #111;
+            border-right: 1px solid var(--border);
         }
 
         .info-block:last-child {
@@ -131,7 +147,7 @@
         .info-row {
             display: flex;
             justify-content: space-between;
-            border-bottom: 1px solid #111;
+            border-bottom: 1px solid var(--border);
             font-size: 12px;
             padding: 4px 0;
         }
@@ -143,9 +159,9 @@
         .info-row strong { font-weight: 700; }
 
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #111; padding: 6px 8px; font-size: 12px; }
-        th { background: #6f6a6a; color: white; text-transform: uppercase; font-weight: 700; letter-spacing: 0.3px; }
-        tbody tr:nth-child(even) { background: #fafafa; }
+        th, td { border: 1px solid var(--border); padding: 6px 8px; font-size: 12px; }
+        th { background: #f0f7fb; color: #2b4c63; text-transform: uppercase; font-weight: 700; letter-spacing: 0.3px; }
+        tbody tr:nth-child(even) { background: #f8fbff; }
 
         #tablaRemision input {
             width: 100%;
@@ -232,10 +248,12 @@
         }
 
         .observacion {
-            border: 1px solid #111;
+            border: 1px solid var(--border);
             border-top: 0;
             padding: 6px 10px;
             font-size: 12px;
+            border-radius: 0 0 8px 8px;
+            background: #f9fcff;
         }
 
         .observacion textarea {
@@ -249,7 +267,7 @@
 
         .signature-area {
             margin-top: 18px;
-            border-top: 1px solid #111;
+            border-top: 1px solid var(--border);
             padding-top: 18px;
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -263,7 +281,7 @@
         }
 
         .signature-line {
-            border-top: 1px solid #111;
+            border-top: 1px solid var(--border);
             margin-top: 30px;
         }
 
@@ -309,8 +327,20 @@
 
         @media print {
             body { padding: 0; background: white; }
-            nav, .action-bar, .list-card, .select-row .edit-toggle, .supabase-panel { display: none !important; }
-            .page { box-shadow: none; border-radius: 0; width: 11in; min-height: 8.5in; }
+            nav,
+            .action-bar,
+            .list-card,
+            .select-row,
+            .supabase-panel {
+                display: none !important;
+            }
+            .page {
+                box-shadow: none;
+                border-radius: 0;
+                width: 11in;
+                min-height: auto;
+                padding: 18px 20px;
+            }
             .edit-only { display: none !important; }
         }
 
@@ -323,14 +353,14 @@
 <body>
     <div class="page">
         <div class="top-bar">
-            <div class="header-left">
-                <strong>INSUMOS QUIMICOS Y SERVICIOS DE LA COSTA</strong>
-                <span>NIT : 901875715-0</span>
+            <div class="brand">
+                <img src="Imagen1.jpg" alt="Logo de INQUISERCO" class="brand-mark" />
+                <div class="brand-name">
+                    <strong>INSUMOS QUIMICOS Y SERVICIOS DE LA COSTA</strong>
+                    <span>NIT : 901875715-0</span>
+                </div>
             </div>
-            <div class="header-right">
-                <span style="font-size:11px;font-weight:700;">INQUISERCO</span>
-                <img src="logo-inquiserco.svg" alt="Logo INQUISERCO" class="header-logo" />
-            </div>
+            <div class="remision-title">Remisión</div>
         </div>
 
         <nav>
